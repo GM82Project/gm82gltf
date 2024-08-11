@@ -329,14 +329,22 @@ export fn gltf_texture_type(gltf_id: f64, texture_id: f64) [*:0]const u8 {
     return return_string(image.mimeType orelse return "");
 }
 
-export fn gltf_texture_pointer(gltf_id: f64, texture_id: f64) f64 {
+export fn gltf_texture_copy(gltf_id: f64, texture_id: f64, dest_address: f64, dest_size: f64) f64 {
+    const dest_address_i: usize = @intFromFloat(dest_address);
+    const dest_ptr: [*]u8 = @ptrFromInt(dest_address_i);
+    const dest: []u8 = dest_ptr[0..@intFromFloat(dest_size)];
     const glb = get_glb(gltf_id) orelse return -1;
     const gltf = &glb.json.value;
     const texture = array_get(GLTF.Texture, gltf.textures, texture_id) orelse return -1;
     const image = array_get(GLTF.Image, gltf.images, texture.source) orelse return -1;
     const bv = array_get(GLTF.BufferView, gltf.bufferViews, image.bufferView) orelse return -1;
-    const data = array_get([]const u8, glb.buffers, bv.buffer) orelse return -1;
-    return @floatFromInt(@intFromPtr(data.ptr) + bv.byteOffset);
+    const buffer = array_get([]const u8, glb.buffers, bv.buffer) orelse return -1;
+    const data = buffer.*[bv.byteOffset .. bv.byteOffset + bv.byteLength];
+    if (dest.len != data.len) {
+        return -1;
+    }
+    std.mem.copyForwards(u8, dest, data);
+    return 0;
 }
 
 export fn gltf_texture_size(gltf_id: f64, texture_id: f64) f64 {
