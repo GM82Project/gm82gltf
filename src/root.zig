@@ -307,6 +307,12 @@ export fn gltf_material_base_texcoord(gltf_id: f64, material_id: f64) f64 {
     return @floatFromInt(baseColorTexture.texCoord);
 }
 
+export fn gltf_texture_count(gltf_id: f64) f64 {
+    const gltf = get_gltf(gltf_id) orelse return -1;
+    const textures = gltf.textures orelse return 0;
+    return @floatFromInt(textures.len);
+}
+
 export fn gltf_texture_wrap_h(gltf_id: f64, texture_id: f64) f64 {
     const sampler = get_sampler(gltf_id, texture_id) orelse return 10497;
     return @floatFromInt(sampler.wrapS);
