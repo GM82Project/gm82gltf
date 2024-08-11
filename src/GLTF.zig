@@ -24,9 +24,6 @@ pub const Accessor = struct {
     count: usize,
     type: []const u8,
     name: ?[]const u8 = null,
-    // don't care about these rn
-    min: ?Value,
-    max: ?Value,
 };
 
 pub const Animation = struct {
@@ -88,6 +85,7 @@ pub const Material = struct {
         metallicRoughnessTexture: ?TextureInfo = null,
     };
     pbrMetallicRoughness: PBRMetallicRoughness = .{},
+    doubleSided: bool = false,
     name: ?[]const u8 = null,
 };
 
