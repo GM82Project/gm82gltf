@@ -74,14 +74,13 @@ fn get_node(gltf_id: f64, node_id: f64) ?*const GLTF.Node {
     return array_get(GLTF.Node, gltf.nodes, node_id);
 }
 
-fn get_node_mesh(gltf_id: f64, node_id: f64) ?*const GLTF.Mesh {
+fn get_mesh(gltf_id: f64, mesh_id: f64) ?*const GLTF.Mesh {
     const gltf = get_gltf(gltf_id) orelse return null;
-    const node = array_get(GLTF.Node, gltf.nodes, node_id) orelse return null;
-    return array_get(GLTF.Mesh, gltf.meshes, node.mesh);
+    return array_get(GLTF.Mesh, gltf.meshes, mesh_id);
 }
 
-fn get_node_primitive(gltf_id: f64, node_id: f64, primitive_id: f64) ?*const GLTF.Mesh.Primitive {
-    const mesh = get_node_mesh(gltf_id, node_id) orelse return null;
+fn get_mesh_primitive(gltf_id: f64, mesh_id: f64, primitive_id: f64) ?*const GLTF.Mesh.Primitive {
+    const mesh = get_mesh(gltf_id, mesh_id) orelse return null;
     return array_get(GLTF.Mesh.Primitive, mesh.primitives, primitive_id);
 }
 
@@ -98,7 +97,7 @@ fn get_buffer_view(glb: *GLB, id: usize) ?[]const u8 {
 
 // EXPORTS
 
-export fn gltf_load(filename: [*:0]const u8) f64 {
+export fn __gltf_load(filename: [*:0]const u8) f64 {
     // will be deleted if loading fails
     var owned_alloc = std.heap.ArenaAllocator.init(g_allocator.allocator());
 
@@ -202,6 +201,24 @@ export fn gltf_destroy(id: f64) f64 {
     return 0;
 }
 
+export fn gltf_scene(gltf_id: f64) f64 {
+    const gltf = get_gltf(gltf_id) orelse return -1;
+    return @floatFromInt(gltf.scene orelse return -1);
+}
+
+export fn gltf_scene_node_count(gltf_id: f64, scene_id: f64) f64 {
+    const gltf = get_gltf(gltf_id) orelse return -1;
+    const scene = array_get(GLTF.Scene, gltf.scenes, scene_id) orelse return -1;
+    const nodes = scene.nodes orelse return 0;
+    return @floatFromInt(nodes.len);
+}
+
+export fn gltf_scene_node(gltf_id: f64, scene_id: f64, node_id: f64) f64 {
+    const gltf = get_gltf(gltf_id) orelse return -1;
+    const scene = array_get(GLTF.Scene, gltf.scenes, scene_id) orelse return -1;
+    return @floatFromInt((array_get(usize, scene.nodes, node_id) orelse return -1).*);
+}
+
 export fn gltf_get_node(gltf_id: f64, name: [*:0]const u8) f64 {
     const gltf = get_gltf(gltf_id) orelse return -1;
     const nodes = gltf.nodes orelse return -1;
@@ -227,40 +244,51 @@ export fn gltf_node_child(gltf_id: f64, node_id: f64, child_id: f64) f64 {
     return @floatFromInt(child.*);
 }
 
-export fn gltf_node_primitive_count(gltf_id: f64, node_id: f64) f64 {
-    const mesh = get_node_mesh(gltf_id, node_id) orelse return -1;
+export fn gltf_node_mesh(gltf_id: f64, node_id: f64) f64 {
+    const node = get_node(gltf_id, node_id) orelse return -1;
+    return @floatFromInt(node.mesh orelse return -1);
+}
+
+export fn gltf_mesh_count(gltf_id: f64) f64 {
+    const gltf = get_gltf(gltf_id) orelse return -1;
+    const meshes = gltf.meshes orelse return 0;
+    return @floatFromInt(meshes.len);
+}
+
+export fn gltf_mesh_primitive_count(gltf_id: f64, mesh_id: f64) f64 {
+    const mesh = get_mesh(gltf_id, mesh_id) orelse return -1;
     return @floatFromInt(mesh.primitives.len);
 }
 
-export fn gltf_node_primitive_material(gltf_id: f64, node_id: f64, primitive_id: f64) f64 {
-    const primitive = get_node_primitive(gltf_id, node_id, primitive_id) orelse return -1;
+export fn gltf_mesh_primitive_material(gltf_id: f64, mesh_id: f64, primitive_id: f64) f64 {
+    const primitive = get_mesh_primitive(gltf_id, mesh_id, primitive_id) orelse return -1;
     return @floatFromInt(primitive.material orelse return -1);
 }
 
-export fn gltf_node_primitive_mode(gltf_id: f64, node_id: f64, primitive_id: f64) f64 {
-    const primitive = get_node_primitive(gltf_id, node_id, primitive_id) orelse return -1;
+export fn gltf_mesh_primitive_mode(gltf_id: f64, mesh_id: f64, primitive_id: f64) f64 {
+    const primitive = get_mesh_primitive(gltf_id, mesh_id, primitive_id) orelse return -1;
     return @floatFromInt(primitive.mode);
 }
 
-export fn gltf_node_primitive_indices_accessor(gltf_id: f64, node_id: f64, primitive_id: f64) f64 {
-    const primitive = get_node_primitive(gltf_id, node_id, primitive_id) orelse return -1;
+export fn gltf_mesh_primitive_indices_accessor(gltf_id: f64, mesh_id: f64, primitive_id: f64) f64 {
+    const primitive = get_mesh_primitive(gltf_id, mesh_id, primitive_id) orelse return -1;
     return @floatFromInt(primitive.indices orelse return -1);
 }
 
-export fn gltf_node_primitive_attribute_count(gltf_id: f64, node_id: f64, primitive_id: f64) f64 {
-    const primitive = get_node_primitive(gltf_id, node_id, primitive_id) orelse return -1;
+export fn gltf_mesh_primitive_attribute_count(gltf_id: f64, mesh_id: f64, primitive_id: f64) f64 {
+    const primitive = get_mesh_primitive(gltf_id, mesh_id, primitive_id) orelse return -1;
     return @floatFromInt(primitive.attributes.map.count());
 }
 
-export fn gltf_node_primitive_attribute_semantic(gltf_id: f64, node_id: f64, primitive_id: f64, attribute_id: f64) [*:0]const u8 {
-    const primitive = get_node_primitive(gltf_id, node_id, primitive_id) orelse return "";
+export fn gltf_mesh_primitive_attribute_semantic(gltf_id: f64, mesh_id: f64, primitive_id: f64, attribute_id: f64) [*:0]const u8 {
+    const primitive = get_mesh_primitive(gltf_id, mesh_id, primitive_id) orelse return "";
     const attribute_id_i: usize = @intFromFloat(attribute_id);
     if (attribute_id_i >= primitive.attributes.map.count()) return "";
     return return_string(primitive.attributes.map.entries.get(attribute_id_i).key);
 }
 
-export fn gltf_node_primitive_attribute_accessor(gltf_id: f64, node_id: f64, primitive_id: f64, attribute_id: f64) f64 {
-    const primitive = get_node_primitive(gltf_id, node_id, primitive_id) orelse return -1;
+export fn gltf_mesh_primitive_attribute_accessor(gltf_id: f64, mesh_id: f64, primitive_id: f64, attribute_id: f64) f64 {
+    const primitive = get_mesh_primitive(gltf_id, mesh_id, primitive_id) orelse return -1;
     const attribute_id_i: usize = @intFromFloat(attribute_id);
     if (attribute_id_i >= primitive.attributes.map.count()) return -1;
     return @floatFromInt(primitive.attributes.map.entries.get(attribute_id_i).value);
@@ -274,6 +302,11 @@ export fn gltf_accessor_type(gltf_id: f64, accessor_id: f64) [*:0]const u8 {
 export fn gltf_accessor_component_type(gltf_id: f64, accessor_id: f64) f64 {
     const accessor = get_accessor(gltf_id, accessor_id) orelse return -1;
     return @floatFromInt(accessor.componentType);
+}
+
+export fn gltf_accessor_normalized(gltf_id: f64, accessor_id: f64) f64 {
+    const accessor = get_accessor(gltf_id, accessor_id) orelse return -1;
+    return @floatFromInt(@intFromBool(accessor.normalized));
 }
 
 export fn gltf_accessor_pointer(gltf_id: f64, accessor_id: f64) f64 {
@@ -376,10 +409,10 @@ export fn gltf_texture_size(gltf_id: f64, texture_id: f64) f64 {
 
 test "gltf stuff" {
     // https://github.com/KhronosGroup/glTF-Sample-Models/blob/main/2.0/Box/glTF-Binary/Box.glb
-    try testing.expectEqual(0, gltf_load("Box.glb"));
+    try testing.expectEqual(0, __gltf_load("Box.glb"));
     try testing.expectEqual(1, gltf_node_child_count(0, 0));
     try testing.expectEqual(1, gltf_node_child(0, 0, 0));
     try testing.expectEqual(648, g_gltfs.get(0).?.buffers[0].len);
-    try testing.expectEqualStrings("NORMAL", std.mem.span(gltf_node_primitive_attribute_semantic(0, 1, 0, 0)));
+    try testing.expectEqualStrings("NORMAL", std.mem.span(gltf_mesh_primitive_attribute_semantic(0, 0, 0, 0)));
     try testing.expectEqual(0, gltf_destroy(0));
 }
