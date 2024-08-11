@@ -104,13 +104,11 @@ export fn gltf_load(filename: [*:0]const u8) f64 {
 
     blk: {
         const filename_slice = std.mem.span(filename);
-        const filename_absolute = std.fs.path.isAbsolute(filename_slice);
-        var file =
-            (if (filename_absolute) std.fs.openFileAbsolute(filename_slice, .{}) else std.fs.cwd().openFile(filename_slice, .{})) catch break :blk;
+        var file = std.fs.cwd().openFile(filename_slice, .{}) catch break :blk;
 
         const filename_dir = std.fs.path.dirname(filename_slice);
         var gltfDir =
-            if (filename_absolute) std.fs.openDirAbsolute(filename_dir orelse break :blk, .{}) catch break :blk else if (filename_dir) |dir| std.fs.cwd().openDir(dir, .{}) catch break :blk else std.fs.cwd();
+            if (filename_dir) |dir| std.fs.cwd().openDir(dir, .{}) catch break :blk else std.fs.cwd();
         defer if (filename_dir) |_| {
             gltfDir.close();
         };
@@ -361,7 +359,7 @@ export fn gltf_texture_save(gltf_id: f64, texture_id: f64, filename: [*:0]const 
     const bv = array_get(GLTF.BufferView, gltf.bufferViews, image.bufferView) orelse return -1;
     const buffer = array_get([]const u8, glb.buffers, bv.buffer) orelse return -1;
     const data = buffer.*[bv.byteOffset .. bv.byteOffset + bv.byteLength];
-    const file = (if (std.fs.path.isAbsoluteZ(filename)) std.fs.createFileAbsoluteZ(filename, .{}) else std.fs.cwd().createFileZ(filename, .{})) catch return -1;
+    const file = std.fs.cwd().createFileZ(filename, .{}) catch return -1;
     file.writeAll(data) catch return -1;
     file.close();
     return 0;
