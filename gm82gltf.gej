@@ -40,6 +40,7 @@
 {"name": "gltf_texture_interpolation", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
 {"name": "gltf_texture_type", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 1},
 {"name": "gltf_texture_copy", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2, 2, 2], "returntype": 2},
+{"name": "gltf_texture_save", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2, 1], "returntype": 2},
 {"name": "gltf_texture_size", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2}],
 			"constants": []
 		}

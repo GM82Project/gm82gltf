@@ -353,6 +353,20 @@ export fn gltf_texture_copy(gltf_id: f64, texture_id: f64, dest_address: f64, de
     return 0;
 }
 
+export fn gltf_texture_save(gltf_id: f64, texture_id: f64, filename: [*:0]const u8) f64 {
+    const glb = get_glb(gltf_id) orelse return -1;
+    const gltf = &glb.json.value;
+    const texture = array_get(GLTF.Texture, gltf.textures, texture_id) orelse return -1;
+    const image = array_get(GLTF.Image, gltf.images, texture.source) orelse return -1;
+    const bv = array_get(GLTF.BufferView, gltf.bufferViews, image.bufferView) orelse return -1;
+    const buffer = array_get([]const u8, glb.buffers, bv.buffer) orelse return -1;
+    const data = buffer.*[bv.byteOffset .. bv.byteOffset + bv.byteLength];
+    const file = (if (std.fs.path.isAbsoluteZ(filename)) std.fs.createFileAbsoluteZ(filename, .{}) else std.fs.cwd().createFileZ(filename, .{})) catch return -1;
+    file.writeAll(data) catch return -1;
+    file.close();
+    return 0;
+}
+
 export fn gltf_texture_size(gltf_id: f64, texture_id: f64) f64 {
     const glb = get_glb(gltf_id) orelse return -1;
     const gltf = &glb.json.value;
