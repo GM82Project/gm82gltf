@@ -30,12 +30,13 @@ fn return_string(string: []const u8) [*:0]const u8 {
 
 // INTERNAL GETTERS
 
-fn array_get(T: type, array: []const T, id: anytype) ?*const T {
-    const id_i: usize = if (@TypeOf(id) == usize) id else @intFromFloat(id);
-    if (id_i >= array.len) {
+fn array_get(T: type, array: ?[]const T, id: anytype) ?*const T {
+    const array_real = array orelse return null;
+    const id_i: usize = if (@TypeOf(id) == ?usize) id orelse return null else @intFromFloat(id);
+    if (id_i >= array_real.len) {
         return null;
     }
-    return &array[id_i];
+    return &array_real[id_i];
 }
 
 fn get_gltf(id: f64) ?*const GLTF {
@@ -45,30 +46,29 @@ fn get_gltf(id: f64) ?*const GLTF {
 
 fn get_material(gltf_id: f64, material_id: f64) ?*const GLTF.Material {
     const gltf = get_gltf(gltf_id) orelse return null;
-    const materials = gltf.materials orelse return null;
-    return array_get(GLTF.Material, materials, material_id);
+    return array_get(GLTF.Material, gltf.materials, material_id);
 }
 
 fn get_texture(gltf_id: f64, texture_id: f64) ?*const GLTF.Texture {
     const gltf = get_gltf(gltf_id) orelse return null;
-    const textures = gltf.textures orelse return null;
-    return array_get(GLTF.Texture, textures, texture_id);
+    return array_get(GLTF.Texture, gltf.textures, texture_id);
+}
+
+fn get_sampler(gltf_id: f64, texture_id: f64) ?*const GLTF.Sampler {
+    const gltf = get_gltf(gltf_id) orelse return null;
+    const texture = array_get(GLTF.Texture, gltf.textures, texture_id) orelse return null;
+    return array_get(GLTF.Sampler, gltf.samplers orelse return null, texture.sampler);
 }
 
 fn get_node(gltf_id: f64, node_id: f64) ?*const GLTF.Node {
     const gltf = get_gltf(gltf_id) orelse return null;
-    const nodes = gltf.nodes orelse return null;
-    return array_get(GLTF.Node, nodes, node_id);
+    return array_get(GLTF.Node, gltf.nodes, node_id);
 }
 
 fn get_node_mesh(gltf_id: f64, node_id: f64) ?*const GLTF.Mesh {
     const gltf = get_gltf(gltf_id) orelse return null;
-    const nodes = gltf.nodes orelse return null;
-    const meshes = gltf.meshes orelse return null;
-    const node = array_get(GLTF.Node, nodes, node_id) orelse return null;
-    const mesh_id = node.mesh orelse return null;
-
-    return array_get(GLTF.Mesh, meshes, mesh_id);
+    const node = array_get(GLTF.Node, gltf.nodes, node_id) orelse return null;
+    return array_get(GLTF.Mesh, gltf.meshes, node.mesh);
 }
 
 fn get_node_primitive(gltf_id: f64, node_id: f64, primitive_id: f64) ?*const GLTF.Mesh.Primitive {
@@ -89,7 +89,7 @@ export fn gltf_load(filename: [*:0]const u8) f64 {
     var owned_alloc = std.heap.ArenaAllocator.init(g_allocator.allocator());
 
     blk: {
-        const filename_slice = filename[0..std.mem.len(filename)];
+        const filename_slice = std.mem.span(filename);
         const filename_absolute = std.fs.path.isAbsolute(filename_slice);
         var file =
             (if (filename_absolute) std.fs.openFileAbsolute(filename_slice, .{}) else std.fs.cwd().openFile(filename_slice, .{})) catch break :blk;
@@ -132,7 +132,7 @@ export fn gltf_load(filename: [*:0]const u8) f64 {
                     const jsonData = temp_alloc.allocator().alloc(u8, chunkLength) catch break :blk;
                     const jsonSize = file.readAll(jsonData) catch break :blk;
                     if (jsonSize != chunkLength) break :blk;
-                    jsonParsed = std.json.parseFromSlice(GLTF, owned_alloc.allocator(), jsonData, .{}) catch |err| {
+                    jsonParsed = std.json.parseFromSlice(GLTF, owned_alloc.allocator(), jsonData, .{ .ignore_unknown_fields = true, .allocate = .alloc_always }) catch |err| {
                         std.log.err("{}", .{err});
                         break :blk;
                     };
@@ -152,7 +152,7 @@ export fn gltf_load(filename: [*:0]const u8) f64 {
         const parsed = jsonParsed orelse break :blk;
 
         const bufferCount = (parsed.value.buffers orelse &[0]GLTF.Buffer{}).len;
-        const buffers = g_allocator.allocator().alloc([]const u8, bufferCount) catch break :blk;
+        const buffers = owned_alloc.allocator().alloc([]const u8, bufferCount) catch break :blk;
 
         if (parsed.value.buffers) |bufferData| {
             for (bufferData, 0..) |buffer, i| {
@@ -195,7 +195,7 @@ export fn gltf_get_node(gltf_id: f64, name: [*:0]const u8) f64 {
     const nodes = gltf.nodes orelse return -1;
     for (nodes, 0..) |n, i| {
         if (n.name) |n_name| {
-            if (std.mem.eql(u8, n_name, name[0..std.mem.len(name)])) {
+            if (std.mem.eql(u8, n_name, std.mem.span(name))) {
                 return @floatFromInt(i);
             }
         }
@@ -211,8 +211,7 @@ export fn gltf_node_child_count(gltf_id: f64, node_id: f64) f64 {
 
 export fn gltf_node_child(gltf_id: f64, node_id: f64, child_id: f64) f64 {
     const node = get_node(gltf_id, node_id) orelse return -1;
-    const children = node.children orelse return -1;
-    const child = array_get(usize, children, child_id) orelse return -1;
+    const child = array_get(usize, node.children, child_id) orelse return -1;
     return @floatFromInt(child.*);
 }
 
@@ -224,6 +223,35 @@ export fn gltf_node_primitive_count(gltf_id: f64, node_id: f64) f64 {
 export fn gltf_node_primitive_material(gltf_id: f64, node_id: f64, primitive_id: f64) f64 {
     const primitive = get_node_primitive(gltf_id, node_id, primitive_id) orelse return -1;
     return @floatFromInt(primitive.material orelse return -1);
+}
+
+export fn gltf_node_primitive_mode(gltf_id: f64, node_id: f64, primitive_id: f64) f64 {
+    const primitive = get_node_primitive(gltf_id, node_id, primitive_id) orelse return -1;
+    return @floatFromInt(primitive.mode);
+}
+
+export fn gltf_node_primitive_indices_accessor(gltf_id: f64, node_id: f64, primitive_id: f64) f64 {
+    const primitive = get_node_primitive(gltf_id, node_id, primitive_id) orelse return -1;
+    return @floatFromInt(primitive.indices orelse return -1);
+}
+
+export fn gltf_node_primitive_attribute_count(gltf_id: f64, node_id: f64, primitive_id: f64) f64 {
+    const primitive = get_node_primitive(gltf_id, node_id, primitive_id) orelse return -1;
+    return @floatFromInt(primitive.attributes.map.count());
+}
+
+export fn gltf_node_primitive_attribute_semantic(gltf_id: f64, node_id: f64, primitive_id: f64, attribute_id: f64) [*:0]const u8 {
+    const primitive = get_node_primitive(gltf_id, node_id, primitive_id) orelse return "";
+    const attribute_id_i: usize = @intFromFloat(attribute_id);
+    if (attribute_id_i >= primitive.attributes.map.count()) return "";
+    return return_string(primitive.attributes.map.entries.get(attribute_id_i).key);
+}
+
+export fn gltf_node_primitive_attribute_accessor(gltf_id: f64, node_id: f64, primitive_id: f64, attribute_id: f64) f64 {
+    const primitive = get_node_primitive(gltf_id, node_id, primitive_id) orelse return -1;
+    const attribute_id_i: usize = @intFromFloat(attribute_id);
+    if (attribute_id_i >= primitive.attributes.map.count()) return -1;
+    return @floatFromInt(primitive.attributes.map.entries.get(attribute_id_i).value);
 }
 
 export fn gltf_material_base_texture(gltf_id: f64, material_id: f64) f64 {
@@ -238,11 +266,27 @@ export fn gltf_material_base_texcoord(gltf_id: f64, material_id: f64) f64 {
     return @floatFromInt(baseColorTexture.texCoord);
 }
 
+export fn gltf_texture_wrap_h(gltf_id: f64, texture_id: f64) f64 {
+    const sampler = get_sampler(gltf_id, texture_id) orelse return 10497;
+    return @floatFromInt(sampler.wrapS);
+}
+
+export fn gltf_texture_wrap_v(gltf_id: f64, texture_id: f64) f64 {
+    const sampler = get_sampler(gltf_id, texture_id) orelse return 10497;
+    return @floatFromInt(sampler.wrapT);
+}
+
+export fn gltf_texture_interpolation(gltf_id: f64, texture_id: f64) f64 {
+    const sampler = get_sampler(gltf_id, texture_id) orelse return 10497;
+    return @floatFromInt(@intFromBool(sampler.magFilter != 9728));
+}
+
 test "gltf stuff" {
     // https://github.com/KhronosGroup/glTF-Sample-Models/blob/main/2.0/Box/glTF-Binary/Box.glb
     try testing.expectEqual(0, gltf_load("Box.glb"));
     try testing.expectEqual(1, gltf_node_child_count(0, 0));
     try testing.expectEqual(1, gltf_node_child(0, 0, 0));
     try testing.expectEqual(648, g_gltfs.get(0).?.buffers[0].len);
+    try testing.expectEqualStrings("NORMAL", std.mem.span(gltf_node_primitive_attribute_semantic(0, 1, 0, 0)));
     try testing.expectEqual(0, gltf_destroy(0));
 }
