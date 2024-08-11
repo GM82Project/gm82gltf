@@ -32,15 +32,24 @@ fn return_string(string: []const u8) [*:0]const u8 {
 
 fn array_get(T: type, array: ?[]const T, id: anytype) ?*const T {
     const array_real = array orelse return null;
-    const id_i: usize = if (@TypeOf(id) == ?usize) id orelse return null else @intFromFloat(id);
+    const id_i: usize = switch (@TypeOf(id)) {
+        ?usize => id orelse return null,
+        usize => id,
+        f64 => @intFromFloat(id),
+        else => @compileError("unknown id type"),
+    };
     if (id_i >= array_real.len) {
         return null;
     }
     return &array_real[id_i];
 }
 
+fn get_glb(id: f64) ?*const GLB {
+    return g_gltfs.getPtr(@intFromFloat(id));
+}
+
 fn get_gltf(id: f64) ?*const GLTF {
-    const glb = g_gltfs.getPtr(@intFromFloat(id)) orelse return null;
+    const glb = get_glb(id) orelse return null;
     return &glb.*.json.value;
 }
 
@@ -74,6 +83,11 @@ fn get_node_mesh(gltf_id: f64, node_id: f64) ?*const GLTF.Mesh {
 fn get_node_primitive(gltf_id: f64, node_id: f64, primitive_id: f64) ?*const GLTF.Mesh.Primitive {
     const mesh = get_node_mesh(gltf_id, node_id) orelse return null;
     return array_get(GLTF.Mesh.Primitive, mesh.primitives, primitive_id);
+}
+
+fn get_accessor(gltf_id: f64, accessor_id: f64) ?*const GLTF.Accessor {
+    const gltf = get_gltf(gltf_id) orelse return null;
+    return array_get(GLTF.Accessor, gltf.accessors, accessor_id);
 }
 
 fn get_buffer_view(glb: *GLB, id: usize) ?[]const u8 {
@@ -254,6 +268,33 @@ export fn gltf_node_primitive_attribute_accessor(gltf_id: f64, node_id: f64, pri
     return @floatFromInt(primitive.attributes.map.entries.get(attribute_id_i).value);
 }
 
+export fn gltf_accessor_type(gltf_id: f64, accessor_id: f64) [*:0]const u8 {
+    const accessor = get_accessor(gltf_id, accessor_id) orelse return "";
+    return return_string(accessor.type);
+}
+
+export fn gltf_accessor_component_type(gltf_id: f64, accessor_id: f64) f64 {
+    const accessor = get_accessor(gltf_id, accessor_id) orelse return -1;
+    return @floatFromInt(accessor.componentType);
+}
+
+export fn gltf_accessor_pointer(gltf_id: f64, accessor_id: f64) f64 {
+    const glb = get_glb(gltf_id) orelse return -1;
+    const gltf = &glb.json.value;
+    const accessor = array_get(GLTF.Accessor, gltf.accessors, accessor_id) orelse return -1;
+    const bv = array_get(GLTF.BufferView, gltf.bufferViews, accessor.bufferView) orelse return -1;
+    const data = array_get([]const u8, glb.buffers, bv.buffer) orelse return -1;
+    return @floatFromInt(@intFromPtr(data.ptr) + bv.byteOffset + accessor.byteOffset);
+}
+
+export fn gltf_accessor_size(gltf_id: f64, accessor_id: f64) f64 {
+    const glb = get_glb(gltf_id) orelse return -1;
+    const gltf = &glb.json.value;
+    const accessor = array_get(GLTF.Accessor, gltf.accessors, accessor_id) orelse return -1;
+    const bv = array_get(GLTF.BufferView, gltf.bufferViews, accessor.bufferView) orelse return -1;
+    return @floatFromInt(bv.byteLength);
+}
+
 export fn gltf_material_base_texture(gltf_id: f64, material_id: f64) f64 {
     const material = get_material(gltf_id, material_id) orelse return -1;
     const baseColorTexture = material.pbrMetallicRoughness.baseColorTexture orelse return -1;
@@ -279,6 +320,32 @@ export fn gltf_texture_wrap_v(gltf_id: f64, texture_id: f64) f64 {
 export fn gltf_texture_interpolation(gltf_id: f64, texture_id: f64) f64 {
     const sampler = get_sampler(gltf_id, texture_id) orelse return 10497;
     return @floatFromInt(@intFromBool(sampler.magFilter != 9728));
+}
+
+export fn gltf_texture_type(gltf_id: f64, texture_id: f64) [*:0]const u8 {
+    const gltf = get_gltf(gltf_id) orelse return "";
+    const texture = array_get(GLTF.Texture, gltf.textures, texture_id) orelse return "";
+    const image = array_get(GLTF.Image, gltf.images, texture.source) orelse return "";
+    return return_string(image.mimeType orelse return "");
+}
+
+export fn gltf_texture_pointer(gltf_id: f64, texture_id: f64) f64 {
+    const glb = get_glb(gltf_id) orelse return -1;
+    const gltf = &glb.json.value;
+    const texture = array_get(GLTF.Texture, gltf.textures, texture_id) orelse return -1;
+    const image = array_get(GLTF.Image, gltf.images, texture.source) orelse return -1;
+    const bv = array_get(GLTF.BufferView, gltf.bufferViews, image.bufferView) orelse return -1;
+    const data = array_get([]const u8, glb.buffers, bv.buffer) orelse return -1;
+    return @floatFromInt(@intFromPtr(data.ptr) + bv.byteOffset);
+}
+
+export fn gltf_texture_size(gltf_id: f64, texture_id: f64) f64 {
+    const glb = get_glb(gltf_id) orelse return -1;
+    const gltf = &glb.json.value;
+    const texture = array_get(GLTF.Texture, gltf.textures, texture_id) orelse return -1;
+    const image = array_get(GLTF.Image, gltf.images, texture.source) orelse return -1;
+    const bv = array_get(GLTF.BufferView, gltf.bufferViews, image.bufferView) orelse return -1;
+    return @floatFromInt(bv.byteLength);
 }
 
 test "gltf stuff" {
