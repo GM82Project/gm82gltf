@@ -131,47 +131,47 @@ export fn gltf_load(filename: [*:0]const u8) f64 {
         var temp_alloc = std.heap.ArenaAllocator.init(g_allocator.allocator());
         defer temp_alloc.deinit();
 
-        var jsonParsed: ?std.json.Parsed(GLTF) = null;
-        var glbBinary: ?[]const u8 = null;
+        var json_parsed: ?std.json.Parsed(GLTF) = null;
+        var glb_binary: ?[]const u8 = null;
 
-        var remainingLength = fileLength - 12;
-        while (remainingLength > 0) {
-            const chunkLength = file.reader().readInt(u32, .little) catch break :blk;
-            remainingLength -= chunkLength + 8;
-            const chunkType = file.reader().readInt(u32, .little) catch break :blk;
-            switch (chunkType) {
+        var remaining_length = fileLength - 12;
+        while (remaining_length > 0) {
+            const chunk_length = file.reader().readInt(u32, .little) catch break :blk;
+            remaining_length -= chunk_length + 8;
+            const chunk_type = file.reader().readInt(u32, .little) catch break :blk;
+            switch (chunk_type) {
                 0x4e4f534a => { // JSON
                     // there can only be one
-                    if (jsonParsed) |_| break :blk;
-                    const jsonData = temp_alloc.allocator().alloc(u8, chunkLength) catch break :blk;
-                    const jsonSize = file.readAll(jsonData) catch break :blk;
-                    if (jsonSize != chunkLength) break :blk;
-                    jsonParsed = std.json.parseFromSlice(GLTF, owned_alloc.allocator(), jsonData, .{ .ignore_unknown_fields = true, .allocate = .alloc_always }) catch |err| {
+                    if (json_parsed) |_| break :blk;
+                    const json_data = temp_alloc.allocator().alloc(u8, chunk_length) catch break :blk;
+                    const json_size = file.readAll(json_data) catch break :blk;
+                    if (json_size != chunk_length) break :blk;
+                    json_parsed = std.json.parseFromSlice(GLTF, owned_alloc.allocator(), json_data, .{ .ignore_unknown_fields = true, .allocate = .alloc_always }) catch |err| {
                         std.log.err("{}", .{err});
                         break :blk;
                     };
                 },
                 0x004e4942 => { // BIN
                     // there can only be one
-                    if (glbBinary) |_| break :blk;
-                    const blob = owned_alloc.allocator().alignedAlloc(u8, 4, chunkLength) catch break :blk;
-                    const blobSize = file.readAll(blob) catch break :blk;
-                    if (blobSize != chunkLength) break :blk;
-                    glbBinary = blob;
+                    if (glb_binary) |_| break :blk;
+                    const blob = owned_alloc.allocator().alignedAlloc(u8, 4, chunk_length) catch break :blk;
+                    const blob_size = file.readAll(blob) catch break :blk;
+                    if (blob_size != chunk_length) break :blk;
+                    glb_binary = blob;
                 },
-                else => file.seekBy(chunkLength) catch break :blk,
+                else => file.seekBy(chunk_length) catch break :blk,
             }
         }
 
-        const parsed = jsonParsed orelse break :blk;
+        const parsed = json_parsed orelse break :blk;
 
-        const bufferCount = (parsed.value.buffers orelse &[0]GLTF.Buffer{}).len;
-        const buffers = owned_alloc.allocator().alloc([]const u8, bufferCount) catch break :blk;
+        const buffer_count = (parsed.value.buffers orelse &[0]GLTF.Buffer{}).len;
+        const buffers = owned_alloc.allocator().alloc([]const u8, buffer_count) catch break :blk;
 
         if (parsed.value.buffers) |bufferData| {
             for (bufferData, 0..) |buffer, i| {
                 if (i == 0) {
-                    if (glbBinary) |blob| {
+                    if (glb_binary) |blob| {
                         if (buffer.byteLength != blob.len) {
                             break :blk;
                         }
