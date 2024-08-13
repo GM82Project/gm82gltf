@@ -15,6 +15,7 @@ var g_allocator = std.heap.GeneralPurposeAllocator(.{}){};
 var g_gltfs = std.AutoArrayHashMap(i32, GLB).init(g_allocator.allocator());
 var g_gltf_next_id: i32 = 1;
 var g_stringret: ?[:0]u8 = null;
+var g_matrix: [16]f32 = undefined;
 
 fn return_string(string: []const u8) [*:0]const u8 {
     // make new string
@@ -93,6 +94,45 @@ fn get_buffer_view(glb: *GLB, id: usize) ?[]const u8 {
     const bufferViews = glb.json.value.bufferViews orelse return null;
     const bv = bufferViews[id];
     return glb.buffers[bv.buffer][bv.byteOffset .. bv.byteOffset + bv.byteLength];
+}
+
+fn create_transform(node: *GLTF.Node) [16]f32 {
+    var out: [16]f32 = undefined;
+    const qx = node.rotation[0];
+    const qxx = qx * qx;
+    const qy = node.rotation[1];
+    const qyy = qy * qy;
+    const qz = node.rotation[2];
+    const qzz = qz * qz;
+    const qw = node.rotation[4];
+
+    const scaling_row1 = @Vector(4, f32){ 1 - 2 * qyy - 2 * qzz, 2 * qx * qy - 2 * qz * qw, 2 * qx * qz - 2 * qy * qw, 0 };
+    const scaling_row2 = @Vector(4, f32){ 2 * qx * qy, 1 - 2 * qxx - 2 * qzz, 2 * qy * qz + 2 * qx * qw, 0 };
+    const scaling_row3 = @Vector(4, f32){ 2 * qx * qz + 2 * qy * qw, 2 * qy * qz - 2 * qx * qw, 1 - 2 * qxx - 2 * qyy, 0 };
+    @memcpy(out[0..4], scaling_row1 * @as(@Vector(4, f32), @splat(node.scale[0])));
+    @memcpy(out[4..8], scaling_row2 * @as(@Vector(4, f32), @splat(node.scale[1])));
+    @memcpy(out[8..12], scaling_row3 * @as(@Vector(4, f32), @splat(node.scale[2])));
+    @memcpy(out[12..15], node.translation);
+    out[15] = 1;
+
+    return out;
+}
+
+fn multiply_matrices(m_a: [16]f32, m_b: [16]f32) [16]f32 {
+    const b_transposed = [4]@Vector(4, f32){
+        .{ m_b[0], m_b[4], m_b[8], m_b[12] },
+        .{ m_b[1], m_b[5], m_b[9], m_b[13] },
+        .{ m_b[2], m_b[6], m_b[10], m_b[14] },
+        .{ m_b[3], m_b[7], m_b[11], m_b[15] },
+    };
+    var out: [16]f32 = undefined;
+    for (0..4) |y| {
+        const a_row: @Vector(4, f32) = m_a[y * 4 .. y * 4 + 4];
+        for (0..4) |x| {
+            out[y * 4 + x] = @reduce(.Add, a_row * b_transposed[y]);
+        }
+    }
+    return out;
 }
 
 // EXPORTS
