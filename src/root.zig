@@ -13,7 +13,7 @@ const GLB = struct {
 
 var g_allocator = std.heap.GeneralPurposeAllocator(.{}){};
 var g_gltfs = std.AutoArrayHashMap(i32, GLB).init(g_allocator.allocator());
-var g_gltf_next_id: i32 = 0;
+var g_gltf_next_id: i32 = 1;
 var g_stringret: ?[:0]u8 = null;
 
 fn return_string(string: []const u8) [*:0]const u8 {
@@ -96,6 +96,16 @@ fn get_buffer_view(glb: *GLB, id: usize) ?[]const u8 {
 }
 
 // EXPORTS
+
+export fn __gltf_reset() f64 {
+    var it = g_gltfs.iterator();
+    while (it.next()) |entry| {
+        entry.value_ptr.deinit();
+    }
+    g_gltfs.clearAndFree();
+    g_gltf_next_id = 1;
+    return 0;
+}
 
 export fn __gltf_load(filename: [*:0]const u8) f64 {
     // will be deleted if loading fails
