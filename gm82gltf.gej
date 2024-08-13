@@ -20,7 +20,20 @@
 {"name": "__gltf_reset", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [], "returntype": 2},
 {"name": "__gltf_load", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [1], "returntype": 2},
 {"name": "gltf_destroy", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2], "returntype": 2},
+{"name": "gltf_scene", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2], "returntype": 2},
+{"name": "gltf_scene_node_count", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
+{"name": "gltf_scene_node", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2, 2], "returntype": 2},
 {"name": "gltf_get_node", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 1], "returntype": 2},
+{"name": "gltf_node_tx", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
+{"name": "gltf_node_ty", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
+{"name": "gltf_node_tz", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
+{"name": "gltf_node_rx", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
+{"name": "gltf_node_ry", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
+{"name": "gltf_node_rz", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
+{"name": "gltf_node_rw", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
+{"name": "gltf_node_sx", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
+{"name": "gltf_node_sy", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
+{"name": "gltf_node_sz", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
 {"name": "gltf_node_child_count", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
 {"name": "gltf_node_child", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2, 2], "returntype": 2},
 {"name": "gltf_node_mesh", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
@@ -46,7 +59,8 @@
 {"name": "gltf_texture_type", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 1},
 {"name": "gltf_texture_copy", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2, 2, 2], "returntype": 2},
 {"name": "gltf_texture_save", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2, 1], "returntype": 2},
-{"name": "gltf_texture_size", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2}],
+{"name": "gltf_texture_size", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2}
+			],
 			"constants": []
 		}
 	]

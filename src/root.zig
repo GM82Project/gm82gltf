@@ -242,6 +242,56 @@ export fn gltf_get_node(gltf_id: f64, name: [*:0]const u8) f64 {
     return -1;
 }
 
+export fn gltf_node_tx(gltf_id: f64, node_id: f64) f64 {
+    const node = get_node(gltf_id, node_id) orelse return -1;
+    return node.translation[0];
+}
+
+export fn gltf_node_ty(gltf_id: f64, node_id: f64) f64 {
+    const node = get_node(gltf_id, node_id) orelse return -1;
+    return node.translation[1];
+}
+
+export fn gltf_node_tz(gltf_id: f64, node_id: f64) f64 {
+    const node = get_node(gltf_id, node_id) orelse return -1;
+    return node.translation[2];
+}
+
+export fn gltf_node_rx(gltf_id: f64, node_id: f64) f64 {
+    const node = get_node(gltf_id, node_id) orelse return -1;
+    return node.rotation[0];
+}
+
+export fn gltf_node_ry(gltf_id: f64, node_id: f64) f64 {
+    const node = get_node(gltf_id, node_id) orelse return -1;
+    return node.rotation[1];
+}
+
+export fn gltf_node_rz(gltf_id: f64, node_id: f64) f64 {
+    const node = get_node(gltf_id, node_id) orelse return -1;
+    return node.rotation[2];
+}
+
+export fn gltf_node_rw(gltf_id: f64, node_id: f64) f64 {
+    const node = get_node(gltf_id, node_id) orelse return -1;
+    return node.rotation[3];
+}
+
+export fn gltf_node_sx(gltf_id: f64, node_id: f64) f64 {
+    const node = get_node(gltf_id, node_id) orelse return -1;
+    return node.scale[0];
+}
+
+export fn gltf_node_sy(gltf_id: f64, node_id: f64) f64 {
+    const node = get_node(gltf_id, node_id) orelse return -1;
+    return node.scale[1];
+}
+
+export fn gltf_node_sz(gltf_id: f64, node_id: f64) f64 {
+    const node = get_node(gltf_id, node_id) orelse return -1;
+    return node.scale[2];
+}
+
 export fn gltf_node_child_count(gltf_id: f64, node_id: f64) f64 {
     const node = get_node(gltf_id, node_id) orelse return -1;
     const children = node.children orelse return 0;
