@@ -6,6 +6,7 @@ animations: ?[]Animation = null,
 asset: Asset,
 buffers: ?[]Buffer = null,
 bufferViews: ?[]BufferView = null,
+cameras: ?[]Camera = null,
 images: ?[]Image = null,
 materials: ?[]Material = null,
 meshes: ?[]Mesh = null,
@@ -67,7 +68,23 @@ pub const BufferView = struct {
     target: ?usize = null,
 };
 
-pub const GLTF = struct {};
+pub const Camera = struct {
+    pub const Orthographic = struct {
+        xmag: f32,
+        ymag: f32,
+        zfar: f32,
+        znear: f32,
+    };
+    pub const Perspective = struct {
+        aspectRatio: f32,
+        yfov: f32,
+        zfar: f32,
+        znear: f32,
+    };
+    orthographic: ?Orthographic = null,
+    perspective: ?Perspective = null,
+    type: []const u8,
+};
 
 pub const Image = struct {
     uri: ?[]const u8 = null,
@@ -101,6 +118,7 @@ pub const Mesh = struct {
 };
 
 pub const Node = struct {
+    camera: ?usize = null,
     children: ?[]usize = null,
     skin: ?usize = null,
     matrix: [16]f32 = .{ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 },

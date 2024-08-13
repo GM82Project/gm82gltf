@@ -3,63 +3,701 @@
 	"folder": "gm82",
 	"version": "1.0",
 	"author": "Floogle",
-	"date": "11/08/2024",
+	"date": "14/08/2024",
 	"license": "Free to use, also for commercial games.",
 	"description": "",
 	"helpfile": "",
 	"hidden": false,
-	"dependencies": ["Game Maker 8.2 DirectX9"],
+	"dependencies": [
+		"Game Maker 8.2 DirectX9",
+		"Game Maker 8.2 Network"
+	],
 	"files": [
 		{
 			"filename": "gm82gltf.dll",
 			"origname": "zig-out/bin/gm82gltf.dll",
 			"kind": 1,
 			"init": "",
+			"final": "__gltf_reset",
+			"functions": [
+				{
+					"name": "__gltf_reset",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": true,
+					"argtypes": [],
+					"returntype": 2
+				},
+				{
+					"name": "__gltf_load",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": true,
+					"argtypes": [
+						1
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_destroy",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_scene",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_scene_node_count",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_scene_node",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_get_node",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						1
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_tx",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_ty",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_tz",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_rx",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_ry",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_rz",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_rw",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_sx",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_sy",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_sz",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_child_count",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_child",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_camera",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_mesh",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_camera_type",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 1
+				},
+				{
+					"name": "gltf_camera_aspect",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_camera_yfov",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_camera_zfar",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_camera_znear",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_mesh_count",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_mesh_primitive_count",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_mesh_primitive_material",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_mesh_primitive_mode",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_mesh_primitive_indices_accessor",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_mesh_primitive_attribute_count",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_mesh_primitive_attribute_semantic",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2,
+						2,
+						2
+					],
+					"returntype": 1
+				},
+				{
+					"name": "gltf_mesh_primitive_attribute_accessor",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2,
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_accessor_type",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 1
+				},
+				{
+					"name": "gltf_accessor_component_type",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_accessor_normalized",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_accessor_stride",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_accessor_copy",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_accessor_pointer",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_accessor_size",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_material_base_texture",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_material_base_texcoord",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_texture_count",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_texture_wrap_h",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_texture_wrap_v",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_texture_interpolation",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_texture_type",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 1
+				},
+				{
+					"name": "gltf_texture_copy",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2,
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_texture_save",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2,
+						1
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_texture_size",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				}
+			],
+			"constants": []
+		},
+		{
+			"filename": "gm82gltf.gml",
+			"origname": "gm82gltf.gml",
+			"kind": 2,
+			"init": "__gltf_init",
 			"final": "",
 			"functions": [
-{"name": "__gltf_reset", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [], "returntype": 2},
-{"name": "__gltf_load", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [1], "returntype": 2},
-{"name": "gltf_destroy", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2], "returntype": 2},
-{"name": "gltf_scene", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2], "returntype": 2},
-{"name": "gltf_scene_node_count", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_scene_node", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2, 2], "returntype": 2},
-{"name": "gltf_get_node", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 1], "returntype": 2},
-{"name": "gltf_node_tx", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_node_ty", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_node_tz", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_node_rx", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_node_ry", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_node_rz", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_node_rw", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_node_sx", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_node_sy", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_node_sz", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_node_child_count", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_node_child", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2, 2], "returntype": 2},
-{"name": "gltf_node_mesh", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_mesh_count", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2], "returntype": 2},
-{"name": "gltf_mesh_primitive_count", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_mesh_primitive_material", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2, 2], "returntype": 2},
-{"name": "gltf_mesh_primitive_mode", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2, 2], "returntype": 2},
-{"name": "gltf_mesh_primitive_indices_accessor", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2, 2], "returntype": 2},
-{"name": "gltf_mesh_primitive_attribute_count", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2, 2], "returntype": 2},
-{"name": "gltf_mesh_primitive_attribute_semantic", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2, 2, 2], "returntype": 1},
-{"name": "gltf_mesh_primitive_attribute_accessor", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2, 2, 2], "returntype": 2},
-{"name": "gltf_accessor_type", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 1},
-{"name": "gltf_accessor_component_type", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_accessor_normalized", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_accessor_pointer", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_accessor_size", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_material_base_texture", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_material_base_texcoord", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_texture_count", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2], "returntype": 2},
-{"name": "gltf_texture_wrap_h", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_texture_wrap_v", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_texture_interpolation", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2},
-{"name": "gltf_texture_type", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 1},
-{"name": "gltf_texture_copy", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2, 2, 2], "returntype": 2},
-{"name": "gltf_texture_save", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2, 1], "returntype": 2},
-{"name": "gltf_texture_size", "extname": "", "calltype": 12, "helpline": "", "hidden": false, "argtypes": [2, 2], "returntype": 2}
+				{
+					"name": "__gltf_init",
+					"extname": "",
+					"calltype": 2,
+					"helpline": "",
+					"hidden": true,
+					"argtypes": [],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_load",
+					"extname": "",
+					"calltype": 2,
+					"helpline": "gltf_load(filename)",
+					"hidden": false,
+					"argtypes": [
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "__gltf_format_add",
+					"extname": "",
+					"calltype": 2,
+					"helpline": "",
+					"hidden": true,
+					"argtypes": null,
+					"returntype": 2
+				},
+				{
+					"name": "__gltf_create_index_buffer",
+					"extname": "",
+					"calltype": 2,
+					"helpline": "",
+					"hidden": true,
+					"argtypes": null,
+					"returntype": 2
+				},
+				{
+					"name": "gltf_draw_node",
+					"extname": "",
+					"calltype": 2,
+					"helpline": "gltf_draw_node(gltf,node_id)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				}
 			],
 			"constants": []
 		}

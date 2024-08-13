@@ -1,0 +1,212 @@
+#define __gltf_init
+    globalvar __gm82gltf_backgrounds;
+    globalvar __gm82gltf_textures;
+    globalvar __gm82gltf_meshes;
+    globalvar __gm82gltf_meshid; __gm82gltf_meshid=0
+    // stuff on primitives in meshes
+    globalvar __gm82gltf_meshformats;
+    globalvar __gm82gltf_meshindices;
+    globalvar __gm82gltf_meshmodes;
+    globalvar __gm82gltf_primitives;
+    globalvar __gm82gltf_primitiveid; __gm82gltf_primitiveid=0
+    // stuff on attributes in primitives
+    globalvar __gm82gltf_primitivebuffers;
+
+
+#define gltf_load
+    ///gltf_load(fn)
+    var __i,__j,__k,__gltf,__texfile,__accessor,__type,__usage,__stride;
+    __gltf=__gltf_load(argument0)
+    // load textures
+    __i=0 repeat (gltf_texture_count(__gltf)) {
+        __texfile=string_replace(gltf_texture_type(__gltf,__i),"image/",temp_directory+"\tmp.")
+        gltf_texture_save(__gltf,__i,__texfile)
+        __gm82gltf_backgrounds[__gltf,__i]=background_add(__texfile,false,false)
+        __gm82gltf_textures[__gltf,__i]=background_get_texture(__gm82gltf_backgrounds[__gltf,__i])
+        __i+=1
+    }
+    // create vertex buffers
+    // __i: mesh
+    __i=0 repeat (gltf_mesh_count(__gltf)) {
+        __gm82gltf_meshes[__gltf,__i]=__gm82gltf_meshid
+        // __j: primitive
+        __j=0 repeat (gltf_mesh_primitive_count(__gltf,__i)) {
+            __gm82gltf_primitives[__gm82gltf_meshid,__j]=__gm82gltf_primitiveid
+            __gm82gltf_meshmodes[__gm82gltf_meshid,__j]=gltf_mesh_primitive_mode(__gltf,__i,__j)
+            if (__gm82gltf_meshmodes[__gm82gltf_meshid,__j]<2)
+                __gm82gltf_meshmodes[__gm82gltf_meshid,__j]-=1
+            else if (__gm82gltf_meshmodes[__gm82gltf_meshid,__j]==2)
+                {show_error("Line loops not supported.",true) exit}
+            __accessor=gltf_mesh_primitive_indices_accessor(__gltf,__i,__j)
+            if (__accessor>=0) {
+                __gm82gltf_meshindices[__gm82gltf_meshid,__j]=__gltf_create_index_buffer(__gltf,__accessor)
+            } else __gm82gltf_meshindices[__gm82gltf_meshid,__j]=-1
+            // create vertex format
+            vertex_format_begin()
+            // __k: attribute
+            __k=0 repeat (gltf_mesh_primitive_attribute_count(__gltf,__i,__j)) {
+                __accessor=gltf_mesh_primitive_attribute_accessor(__gltf,__i,__j,__k)
+                __gltf_format_add(
+                    gltf_accessor_type(__gltf,__accessor),
+                    gltf_accessor_component_type(__gltf,__accessor),
+                    gltf_accessor_normalized(__gltf,__accessor),
+                    gltf_mesh_primitive_attribute_semantic(__gltf,__i,__j,__k),
+                    __k)
+                __k+=1
+            }
+            __gm82gltf_meshformats[__gm82gltf_meshid,__j]=vertex_format_end()
+            // create vertex buffers
+            __k=0 repeat (gltf_mesh_primitive_attribute_count(__gltf,__i,__j)) {
+                __accessor=gltf_mesh_primitive_attribute_accessor(__gltf,__i,__j,__k)
+                __stride=gltf_accessor_stride(__gltf,__accessor)
+                if (__stride<0) __stride=vertex_format_get_size(
+                    __gm82gltf_meshformats[__gm82gltf_meshid,__j],
+                    __k)
+                __gm82gltf_primitivebuffers[__gm82gltf_primitiveid,__k]=
+                    __gm82dx9_vertex_create_buffer_from_buffer(
+                        gltf_accessor_pointer(__gltf,__accessor),
+                        gltf_accessor_size(__gltf,__accessor),
+                        __stride)
+                __k+=1
+            }
+            __gm82gltf_primitiveid+=1
+            __j+=1
+        }
+        __gm82gltf_meshid+=1
+        __i+=1
+    }
+    return __gltf
+
+
+#define __gltf_format_add
+    ///__gltf_format_add(type,comptype,normalized,semantic,slot)
+    var __type;
+    switch (argument0) {
+    case "SCALAR": if (argument1==5126) __type=vf_type_float1 break
+    case "VEC2":
+        switch (argument1) {
+        case 5126: __type=vf_type_float2 break
+        case 5122: if (argument2) __type=vf_type_short2n else __type=vf_type_short2 break
+        case 5123: if (argument2) __type=vf_type_ushort2n break
+        }
+    break
+    case "VEC3": if (argument1==5126) __type=vf_type_float3 break
+    case "VEC4":
+        switch (argument1) {
+        case 5126: __type=vf_type_float4 break
+        case 5122: if (argument2) __type=vf_type_short4n else __type=vf_type_short4 break
+        case 5123: if (argument2) __type=vf_type_ushort4n break
+        case 5121: if (argument2) __type=vf_type_ubyte4n else __type=vf_type_ubyte4 break
+        }
+    break
+    }
+
+    var __underscore; __underscore=string_pos("_",argument3)
+    if (__underscore) argument3=string_copy(argument3,1,__underscore-1)
+    var __usage;
+    switch (string_copy(argument3,1,2)) {
+    case "PO": __usage=vf_usage_position break
+    case "NO": __usage=vf_usage_normal break
+    case "TA": __usage=vf_usage_tangent break
+    case "TE": __usage=vf_usage_texcoord break
+    case "CO": __usage=vf_usage_color break
+    case "JO": __usage=vf_usage_blendindices break
+    case "WE": __usage=vf_usage_blendweight break
+    }
+
+    vertex_format_add_custom(__type,__usage,argument4)
+
+
+#define __gltf_create_index_buffer
+    ///__gltf_create_index_buffer(gltf,accessor)
+    var __ibtype,__src,__dst,__address,__size,__ib;
+    __type=gltf_accessor_component_type(argument0,argument1)
+    __size=gltf_accessor_size(argument0,argument1)
+    __src=-1
+    __dst=-1
+    if (__type==5123 || __type==5125) {
+        // we can use the raw data
+        if (__type==5123) __ibtype=ib_format_16
+        else if (__type=5125) __ibtype=ib_format_32
+        __address=gltf_accessor_pointer(argument0,argument1)
+    } else {
+        // needs converting
+        __ibtype=ib_format_16
+        __src=buffer_create()
+        buffer_set_size(__src,__size)
+        gltf_accessor_copy(argument0,argument1,buffer_get_address(__src,0))
+        __dst=buffer_create()
+        buffer_set_pos(__src,0)
+        if (__type==5121) {
+            repeat (__size) {
+                buffer_write_u16(__dst,buffer_read_u8(__src))
+            }
+        } else {
+            show_error("Unknown index buffer type "+string(__type),true)
+            exit
+        }
+        __address=buffer_get_address(__dst,0)
+    }
+    __ib=__gm82dx9_index_create_buffer_from_buffer(__address,__size,__ibtype)
+    if (__src>=0) {buffer_destroy(__src) buffer_destroy(__dst)}
+    return __ib
+
+
+#define gltf_draw_node
+    ///gltf_draw_node(gltf,node_id)
+    var __i,__j,__k,__mesh_id,__unique_mesh_id,__unique_primitive_id,__material,__texture_id,__texture;
+
+    __mesh_id=gltf_node_mesh(argument0,argument1)
+    if (__mesh_id<0 && gltf_node_child_count(argument0,argument1)<=0) exit;
+
+    d3d_transform_stack_push()
+    d3d_transform_set_scaling(gltf_node_sx(argument0,argument1),gltf_node_sy(argument0,argument1),gltf_node_sz(argument0,argument1))
+    d3d_transform_add_rotation_axis(gltf_node_rx(argument0,argument1),gltf_node_ry(argument0,argument1),gltf_node_rz(argument0,argument1),(-2*180/pi)*arccos(gltf_node_rw(argument0,argument1)))
+    d3d_transform_add_translation(gltf_node_tx(argument0,argument1),gltf_node_ty(argument0,argument1),gltf_node_tz(argument0,argument1))
+    d3d_transform_add_stack_top()
+
+    // reversed from gltf spec because dx9 is left-handed
+    if (d3d_transform_get_determinant()>0) d3d_set_cull_mode(cull_clockwise)
+    else d3d_set_cull_mode(cull_counterclockwise)
+
+    texture_set_repeat(true)
+    if (__mesh_id>=0) {
+        __unique_mesh_id=__gm82gltf_meshes[argument0,__mesh_id]
+        __i=0 repeat (gltf_mesh_primitive_count(argument0,__mesh_id)) {
+            __unique_primitive_id=__gm82gltf_primitives[__unique_mesh_id,__i]
+            __material=gltf_mesh_primitive_material(argument0,__mesh_id,__i)
+            __texture_id=gltf_material_base_texture(argument0,__material)
+            if (__texture_id>=0) __texture=__gm82gltf_textures[argument0,__texture_id]
+            else __texture=background_get_texture(bgWhitePixel)
+            // bind vertex buffers
+            __j=gltf_mesh_primitive_attribute_count(argument0,__mesh_id,__i)-1 repeat (__j) {
+                vertex_buffer_bind(__gm82gltf_primitivebuffers[__unique_primitive_id,__j],__j)
+                __j-=1
+            }
+            // do final draw
+            if (__gm82gltf_meshindices[__unique_mesh_id,__i]>=0)
+                vertex_buffer_draw(
+                    __gm82gltf_primitivebuffers[__unique_primitive_id,0],
+                    __gm82gltf_meshformats[__unique_mesh_id,__i],
+                    __gm82gltf_meshmodes[__unique_mesh_id,__i],
+                    __texture,
+                    __gm82gltf_meshindices[__unique_mesh_id,__i])
+            else
+                vertex_buffer_draw(
+                    __gm82gltf_primitivebuffers[__unique_primitive_id,0],
+                    __gm82gltf_meshformats[__unique_mesh_id,__i],
+                    __gm82gltf_meshmodes[__unique_mesh_id,__i],
+                    __texture)
+            __i+=1
+        }
+    }
+
+    __i=0 repeat (gltf_node_child_count(argument0,argument1)) {
+        gltf_draw_node(argument0,gltf_node_child(argument0,argument1,i))
+        __i+=1
+    }
+
+    d3d_transform_stack_pop()
+
+//
+//

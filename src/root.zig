@@ -75,6 +75,11 @@ fn get_node(gltf_id: f64, node_id: f64) ?*const GLTF.Node {
     return array_get(GLTF.Node, gltf.nodes, node_id);
 }
 
+fn get_camera(gltf_id: f64, camera_id: f64) ?*const GLTF.Camera {
+    const gltf = get_gltf(gltf_id) orelse return null;
+    return array_get(GLTF.Camera, gltf.cameras, camera_id);
+}
+
 fn get_mesh(gltf_id: f64, mesh_id: f64) ?*const GLTF.Mesh {
     const gltf = get_gltf(gltf_id) orelse return null;
     return array_get(GLTF.Mesh, gltf.meshes, mesh_id);
@@ -344,9 +349,43 @@ export fn gltf_node_child(gltf_id: f64, node_id: f64, child_id: f64) f64 {
     return @floatFromInt(child.*);
 }
 
+export fn gltf_node_camera(gltf_id: f64, node_id: f64) f64 {
+    const node = get_node(gltf_id, node_id) orelse return -1;
+    return @floatFromInt(node.camera orelse return -1);
+}
+
 export fn gltf_node_mesh(gltf_id: f64, node_id: f64) f64 {
     const node = get_node(gltf_id, node_id) orelse return -1;
     return @floatFromInt(node.mesh orelse return -1);
+}
+
+export fn gltf_camera_type(gltf_id: f64, camera_id: f64) [*:0]const u8 {
+    const camera = get_camera(gltf_id, camera_id) orelse return "";
+    return return_string(camera.type);
+}
+
+export fn gltf_camera_aspect(gltf_id: f64, camera_id: f64) f64 {
+    const camera = get_camera(gltf_id, camera_id) orelse return -1;
+    const perspective = camera.perspective orelse return -1;
+    return perspective.aspectRatio;
+}
+
+export fn gltf_camera_yfov(gltf_id: f64, camera_id: f64) f64 {
+    const camera = get_camera(gltf_id, camera_id) orelse return -1;
+    const perspective = camera.perspective orelse return -1;
+    return perspective.yfov;
+}
+
+export fn gltf_camera_zfar(gltf_id: f64, camera_id: f64) f64 {
+    const camera = get_camera(gltf_id, camera_id) orelse return -1;
+    const perspective = camera.perspective orelse return -1;
+    return perspective.zfar;
+}
+
+export fn gltf_camera_znear(gltf_id: f64, camera_id: f64) f64 {
+    const camera = get_camera(gltf_id, camera_id) orelse return -1;
+    const perspective = camera.perspective orelse return -1;
+    return perspective.znear;
 }
 
 export fn gltf_mesh_count(gltf_id: f64) f64 {
@@ -409,6 +448,27 @@ export fn gltf_accessor_normalized(gltf_id: f64, accessor_id: f64) f64 {
     return @floatFromInt(@intFromBool(accessor.normalized));
 }
 
+export fn gltf_accessor_stride(gltf_id: f64, accessor_id: f64) f64 {
+    const glb = get_glb(gltf_id) orelse return -1;
+    const gltf = &glb.json.value;
+    const accessor = array_get(GLTF.Accessor, gltf.accessors, accessor_id) orelse return -1;
+    const bv = array_get(GLTF.BufferView, gltf.bufferViews, accessor.bufferView) orelse return -1;
+    return @floatFromInt(bv.byteStride orelse return -1);
+}
+
+export fn gltf_accessor_copy(gltf_id: f64, accessor_id: f64, address: f64) f64 {
+    const glb = get_glb(gltf_id) orelse return -1;
+    const gltf = &glb.json.value;
+    const accessor = array_get(GLTF.Accessor, gltf.accessors, accessor_id) orelse return -1;
+    const bv = array_get(GLTF.BufferView, gltf.bufferViews, accessor.bufferView) orelse return -1;
+    const data = array_get([]const u8, glb.buffers, bv.buffer) orelse return -1;
+    const address_i: usize = @intFromFloat(address);
+    const dest: [*]u8 = @ptrFromInt(address_i);
+    // TODO copy accessor instead of buffer view
+    @memcpy(dest[0..bv.byteLength], data.*[bv.byteOffset..bv.byteLength]);
+    return 0;
+}
+
 export fn gltf_accessor_pointer(gltf_id: f64, accessor_id: f64) f64 {
     const glb = get_glb(gltf_id) orelse return -1;
     const gltf = &glb.json.value;
@@ -423,6 +483,7 @@ export fn gltf_accessor_size(gltf_id: f64, accessor_id: f64) f64 {
     const gltf = &glb.json.value;
     const accessor = array_get(GLTF.Accessor, gltf.accessors, accessor_id) orelse return -1;
     const bv = array_get(GLTF.BufferView, gltf.bufferViews, accessor.bufferView) orelse return -1;
+    // TODO calculate using accessor type and such, this is incorrect
     return @floatFromInt(bv.byteLength);
 }
 
@@ -509,10 +570,10 @@ export fn gltf_texture_size(gltf_id: f64, texture_id: f64) f64 {
 
 test "gltf stuff" {
     // https://github.com/KhronosGroup/glTF-Sample-Models/blob/main/2.0/Box/glTF-Binary/Box.glb
-    try testing.expectEqual(0, __gltf_load("Box.glb"));
-    try testing.expectEqual(1, gltf_node_child_count(0, 0));
-    try testing.expectEqual(1, gltf_node_child(0, 0, 0));
-    try testing.expectEqual(648, g_gltfs.get(0).?.buffers[0].len);
-    try testing.expectEqualStrings("NORMAL", std.mem.span(gltf_mesh_primitive_attribute_semantic(0, 0, 0, 0)));
-    try testing.expectEqual(0, gltf_destroy(0));
+    try testing.expectEqual(1, __gltf_load("Box.glb"));
+    try testing.expectEqual(1, gltf_node_child_count(1, 0));
+    try testing.expectEqual(1, gltf_node_child(1, 0, 0));
+    try testing.expectEqual(648, g_gltfs.get(1).?.buffers[0].len);
+    try testing.expectEqualStrings("NORMAL", std.mem.span(gltf_mesh_primitive_attribute_semantic(1, 0, 0, 0)));
+    try testing.expectEqual(0, gltf_destroy(1));
 }
