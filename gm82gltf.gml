@@ -186,7 +186,7 @@
 
 #define gltf_draw_node
     ///gltf_draw_node(gltf,node_id)
-    var __i,__j,__k,__mesh_id,__unique_mesh_id,__unique_primitive_id,__material,__texture_id,__texture;
+    var __i,__j,__k,__mesh_id,__cullmode,__unique_mesh_id,__unique_primitive_id,__material,__base_texture_id,__base_texture;
 
     __mesh_id=gltf_node_mesh(argument0,argument1)
     if (__mesh_id<0 && gltf_node_child_count(argument0,argument1)<=0) exit;
@@ -198,8 +198,8 @@
     d3d_transform_add_stack_top()
 
     // reversed from gltf spec because dx9 is left-handed
-    if (d3d_transform_get_determinant()>0) d3d_set_cull_mode(cull_clockwise)
-    else d3d_set_cull_mode(cull_counterclockwise)
+    if (d3d_transform_get_determinant()>0) __cullmode=cull_clockwise
+    else __cullmode=cull_counterclockwise
 
     texture_set_repeat(true)
     if (__mesh_id>=0) {
@@ -209,9 +209,19 @@
             
             // set up material
             __material=gltf_mesh_primitive_material(argument0,__mesh_id,__i)
-            __texture_id=gltf_material_base_texture(argument0,__material)
-            if (__texture_id>=0) __texture=__gm82gltf_textures[argument0,__texture_id]
-            else __texture=background_get_texture(bgWhitePixel)
+
+            if (gltf_material_double_sided(argument0,__material)) d3d_set_culling(false)
+            else d3d_set_cull_mode(__cullmode)
+
+            switch (gltf_material_alpha_mode(argument0,__material)) {
+            case "BLEND": draw_set_blend_mode(bm_normal) break
+            case "OPAQUE": d3d_set_alphablend(false) break
+            case "MASK": d3d_set_alphatest(true,cm_greaterequal,gltf_material_alpha_cutoff(argument0,__material))
+            }
+
+            __base_texture_id=gltf_material_base_texture(argument0,__material)
+            if (__base_texture_id>=0) __base_texture=__gm82gltf_textures[argument0,__base_texture_id]
+            else __base_texture=background_get_texture(bgWhitePixel)
             
             shader_pixel_set(__gm82gltf_shader_pixel)
             __gm82dx9_shader_pixel_uniform_f_buffer(0,gltf_material_base_color_pointer(argument0,__material),16)
@@ -227,17 +237,19 @@
                     __gm82gltf_primitivebuffers[__unique_primitive_id,0],
                     __gm82gltf_meshformats[__unique_mesh_id,__i],
                     __gm82gltf_meshmodes[__unique_mesh_id,__i],
-                    __texture,
+                    __base_texture,
                     __gm82gltf_meshindices[__unique_mesh_id,__i])
             else
                 vertex_buffer_draw(
                     __gm82gltf_primitivebuffers[__unique_primitive_id,0],
                     __gm82gltf_meshformats[__unique_mesh_id,__i],
                     __gm82gltf_meshmodes[__unique_mesh_id,__i],
-                    __texture)
+                    __base_texture)
             __i+=1
             
             shader_pixel_reset()
+            d3d_set_alphablend(true)
+            d3d_set_alphatest(false,0,0)
         }
     }
 

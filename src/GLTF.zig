@@ -101,9 +101,25 @@ pub const Material = struct {
         roughnessFactor: f32 = 1,
         metallicRoughnessTexture: ?TextureInfo = null,
     };
-    pbrMetallicRoughness: PBRMetallicRoughness = .{},
-    doubleSided: bool = false,
+    const NormalTextureInfo = struct {
+        index: usize,
+        texCoord: usize = 0,
+        scale: f32 = 1,
+    };
+    const OcclusionTextureInfo = struct {
+        index: usize,
+        texCoord: usize = 0,
+        strength: f32 = 1,
+    };
     name: ?[]const u8 = null,
+    pbrMetallicRoughness: PBRMetallicRoughness = .{},
+    normalTexture: ?NormalTextureInfo = null,
+    occlusionTexture: ?OcclusionTextureInfo = null,
+    emissiveTexture: ?TextureInfo = null,
+    emissiveFactor: [3]f32 = .{ 0, 0, 0 },
+    alphaMode: []const u8 = "OPAQUE",
+    alphaCutoff: f32 = 0.5,
+    doubleSided: bool = false,
 };
 
 pub const Mesh = struct {

@@ -504,6 +504,74 @@ export fn gltf_material_base_texcoord(gltf_id: f64, material_id: f64) f64 {
     return @floatFromInt(baseColorTexture.texCoord);
 }
 
+export fn gltf_material_normal_texture(gltf_id: f64, material_id: f64) f64 {
+    const material = get_material(gltf_id, material_id) orelse return -1;
+    const normalTexture = material.normalTexture orelse return -1;
+    return @floatFromInt(normalTexture.index);
+}
+
+export fn gltf_material_normal_texcoord(gltf_id: f64, material_id: f64) f64 {
+    const material = get_material(gltf_id, material_id) orelse return -1;
+    const normalTexture = material.normalTexture orelse return -1;
+    return @floatFromInt(normalTexture.texCoord);
+}
+
+export fn gltf_material_normal_scale(gltf_id: f64, material_id: f64) f64 {
+    const material = get_material(gltf_id, material_id) orelse return -1;
+    const normalTexture = material.normalTexture orelse return -1;
+    return normalTexture.scale;
+}
+
+export fn gltf_material_occlusion_texture(gltf_id: f64, material_id: f64) f64 {
+    const material = get_material(gltf_id, material_id) orelse return -1;
+    const occlusionTexture = material.occlusionTexture orelse return -1;
+    return @floatFromInt(occlusionTexture.index);
+}
+
+export fn gltf_material_occlusion_texcoord(gltf_id: f64, material_id: f64) f64 {
+    const material = get_material(gltf_id, material_id) orelse return -1;
+    const occlusionTexture = material.occlusionTexture orelse return -1;
+    return @floatFromInt(occlusionTexture.texCoord);
+}
+
+export fn gltf_material_occlusion_strength(gltf_id: f64, material_id: f64) f64 {
+    const material = get_material(gltf_id, material_id) orelse return -1;
+    const occlusionTexture = material.occlusionTexture orelse return -1;
+    return occlusionTexture.strength;
+}
+
+export fn gltf_material_emissive_texture(gltf_id: f64, material_id: f64) f64 {
+    const material = get_material(gltf_id, material_id) orelse return -1;
+    const emissiveTexture = material.emissiveTexture orelse return -1;
+    return @floatFromInt(emissiveTexture.index);
+}
+
+export fn gltf_material_emissive_texcoord(gltf_id: f64, material_id: f64) f64 {
+    const material = get_material(gltf_id, material_id) orelse return -1;
+    const emissiveTexture = material.emissiveTexture orelse return -1;
+    return @floatFromInt(emissiveTexture.texCoord);
+}
+
+export fn gltf_material_emissive_color_pointer(gltf_id: f64, material_id: f64) f64 {
+    const material = get_material(gltf_id, material_id) orelse return -1;
+    return @floatFromInt(@intFromPtr(&material.emissiveFactor));
+}
+
+export fn gltf_material_alpha_mode(gltf_id: f64, material_id: f64) [*:0]const u8 {
+    const material = get_material(gltf_id, material_id) orelse return "";
+    return return_string(material.alphaMode);
+}
+
+export fn gltf_material_alpha_cutoff(gltf_id: f64, material_id: f64) f64 {
+    const material = get_material(gltf_id, material_id) orelse return -1;
+    return material.alphaCutoff;
+}
+
+export fn gltf_material_double_sided(gltf_id: f64, material_id: f64) f64 {
+    const material = get_material(gltf_id, material_id) orelse return -1;
+    return @floatFromInt(@intFromBool(material.doubleSided));
+}
+
 export fn gltf_texture_count(gltf_id: f64) f64 {
     const gltf = get_gltf(gltf_id) orelse return -1;
     const textures = gltf.textures orelse return 0;
