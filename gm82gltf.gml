@@ -12,6 +12,38 @@
     // stuff on attributes in primitives
     globalvar __gm82gltf_primitivebuffers;
 
+    globalvar __gm82gltf_shader_pixel; __gm82gltf_shader_pixel=shader_pixel_create_base64("
+        eJxFj0FqAjEUhr8kUxi6mQsUnGUVWrA9QUcP4ELoViWBloqWsYrLHGGOMPvZeKic
+        w5RkMprV938/L7wnpfdXP2G2/KieAAtI6b0EQh7ePHhAAIvkVoBK7je5ulofzGy/
+        3dd0AoUgi/2tW5rz37E2dF2X8Rj90J9+9Lt+OXyttanL6ev0rXz+/N6ZcnPc6a3R
+        4zAz6tewoC53LprEDXnRisiFBdcEFigL2SWw7H1bgRIUVuAsuWsf4ikp4+yQA0uc
+        jX/mffYe/gG5WDk3
+    ")
+
+    /*
+        struct PS_INPUT {
+            float2 texcoord: TEXCOORD0;
+            float4 color: COLOR0;
+        };
+        
+        struct PS_OUTPUT {
+            float4 color: COLOR0;
+        };
+        
+        SamplerState rBaseTexture: register(s0);
+        float4 rBaseColor: register(c0);
+        
+        PS_OUTPUT main(PS_INPUT input) {
+            PS_OUTPUT output;
+        
+            float4 albedo = tex2D(rBaseTexture, input.texcoord);
+        
+            output.color = albedo * input.color * rBaseColor;
+            
+            return output;
+        }
+    */
+
 
 #define gltf_load
     ///gltf_load(fn)
@@ -174,10 +206,16 @@
         __unique_mesh_id=__gm82gltf_meshes[argument0,__mesh_id]
         __i=0 repeat (gltf_mesh_primitive_count(argument0,__mesh_id)) {
             __unique_primitive_id=__gm82gltf_primitives[__unique_mesh_id,__i]
+            
+            // set up material
             __material=gltf_mesh_primitive_material(argument0,__mesh_id,__i)
             __texture_id=gltf_material_base_texture(argument0,__material)
             if (__texture_id>=0) __texture=__gm82gltf_textures[argument0,__texture_id]
             else __texture=background_get_texture(bgWhitePixel)
+            
+            shader_pixel_set(__gm82gltf_shader_pixel)
+            __gm82dx9_shader_pixel_uniform_f_buffer(0,gltf_material_base_color_pointer(argument0,__material),16)
+            
             // bind vertex buffers
             __j=gltf_mesh_primitive_attribute_count(argument0,__mesh_id,__i)-1 repeat (__j) {
                 vertex_buffer_bind(__gm82gltf_primitivebuffers[__unique_primitive_id,__j],__j)
@@ -198,6 +236,8 @@
                     __gm82gltf_meshmodes[__unique_mesh_id,__i],
                     __texture)
             __i+=1
+            
+            shader_pixel_reset()
         }
     }
 

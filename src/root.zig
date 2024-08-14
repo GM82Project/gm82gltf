@@ -493,6 +493,11 @@ export fn gltf_material_base_texture(gltf_id: f64, material_id: f64) f64 {
     return @floatFromInt(baseColorTexture.index);
 }
 
+export fn gltf_material_base_color_pointer(gltf_id: f64, material_id: f64) f64 {
+    const material = get_material(gltf_id, material_id) orelse return -1;
+    return @floatFromInt(@intFromPtr(&material.pbrMetallicRoughness.baseColorFactor));
+}
+
 export fn gltf_material_base_texcoord(gltf_id: f64, material_id: f64) f64 {
     const material = get_material(gltf_id, material_id) orelse return -1;
     const baseColorTexture = material.pbrMetallicRoughness.baseColorTexture orelse return -1;
