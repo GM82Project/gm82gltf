@@ -49,6 +49,7 @@
     ///gltf_load(fn)
     var __i,__j,__k,__gltf,__texfile,__accessor,__type,__usage,__stride;
     __gltf=__gltf_load(argument0)
+    if (__gltf<0) return __gltf
     // load textures
     __i=0 repeat (gltf_texture_count(__gltf)) {
         __texfile=string_replace(gltf_texture_type(__gltf,__i),"image/",temp_directory+"\tmp.")
@@ -184,8 +185,18 @@
     return __ib
 
 
+#define gltf_draw_scene
+    ///gltf_draw_scene(gltf,scene)
+    var __i;
+    show_debug_message(gltf_scene_node_count(argument0,argument1))
+    __i=0 repeat (gltf_scene_node_count(argument0,argument1)) {
+        gltf_draw_node(argument0,gltf_scene_node(argument0,argument1,__i))
+        __i+=1
+    }
+
+
 #define gltf_draw_node
-    ///gltf_draw_node(gltf,node_id)
+    ///gltf_draw_node(gltf,node)
     var __i,__j,__k,__mesh_id,__cullmode,__unique_mesh_id,__unique_primitive_id,__material,__base_texture_id,__base_texture;
 
     __mesh_id=gltf_node_mesh(argument0,argument1)
