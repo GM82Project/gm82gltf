@@ -167,13 +167,10 @@
 
 #define gltf_use_shader
     ///gltf_use_shader([vertex,pixel])
-    if (argument_count<2) {
-        __gm82gltf_shader_vertex=__gm82gltf_shader_vertex_default
-        __gm82gltf_shader_pixel=__gm82gltf_shader_pixel_default
-    } else {
-        __gm82gltf_shader_vertex=argument[0]
-        __gm82gltf_shader_pixel=argument[1]
-    }
+    __gm82gltf_shader_vertex=__gm82gltf_shader_vertex_default
+    __gm82gltf_shader_pixel=__gm82gltf_shader_pixel_default
+    if (argument_count>=1) if (argument[0]>=0) __gm82gltf_shader_vertex=argument[0]
+    if (argument_count>=2) if (argument[1]>=0) __gm82gltf_shader_pixel=argument[1]
 
 
 #define gltf_draw_scene
