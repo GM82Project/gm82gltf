@@ -273,6 +273,7 @@ export fn gltf_animate(gltf_id: f64, animation_id: f64, time: f64) f64 {
     const glb = get_glb(gltf_id) orelse return -1;
     const gltf = &glb.json.value;
     const animation = array_get(GLTF.Animation, gltf.animations, animation_id) orelse return -1;
+    var done = true;
     channels: for (animation.channels) |channel| {
         const node = array_get_mut(GLTF.Node, gltf.nodes, channel.target.node) orelse continue;
         const output: []f32 = if (std.mem.eql(u8, channel.target.path, "translation")) &node.translation else if (std.mem.eql(u8, channel.target.path, "scale")) &node.scale else if (std.mem.eql(u8, channel.target.path, "rotation")) &node.rotation else continue;
@@ -303,6 +304,7 @@ export fn gltf_animate(gltf_id: f64, animation_id: f64, time: f64) f64 {
         for (input_data, 0..) |keyframe_next, i| {
             if (time < keyframe_next) {
                 // we've found the next keyframe
+                done = false;
                 const prev = if (i != 0) i - 1 else 0;
                 const output_offset = output_byte_offset + (output_bv.byteStride orelse 4 * output.len) * prev;
                 const output_current = @as([*]const f32, @ptrCast(output_buffer.ptr))[output_offset / 4 .. output_offset / 4 + output.len];
@@ -340,7 +342,29 @@ export fn gltf_animate(gltf_id: f64, animation_id: f64, time: f64) f64 {
         const output_offset = output_byte_offset + (output_bv.byteStride orelse 4 * output.len) * input_accessor.count - 1;
         @memcpy(output, @as([*]const f32, @ptrCast(output_buffer.ptr))[output_offset / 4 .. output_offset / 4 + output.len]);
     }
-    return 0;
+    return @floatFromInt(@intFromBool(done));
+}
+
+export fn gltf_animation_length(gltf_id: f64, animation_id: f64) f64 {
+    const glb = get_glb(gltf_id) orelse return -1;
+    const gltf = &glb.json.value;
+    const animation = array_get(GLTF.Animation, gltf.animations, animation_id) orelse return -1;
+    var max: f32 = 0;
+    for (animation.channels) |channel| {
+        const sampler = animation.samplers[channel.sampler];
+        const input_accessor = array_get(GLTF.Accessor, gltf.accessors, sampler.input) orelse continue;
+        if (input_accessor.componentType != 5126) {
+            // only floats are supported for input
+            continue;
+        }
+        const input_bv = array_get(GLTF.BufferView, gltf.bufferViews, input_accessor.bufferView) orelse continue;
+        const input_buffer = array_get([]align(4) const u8, glb.buffers, input_bv.buffer) orelse continue;
+        const input_byte_offset = input_bv.byteOffset + input_accessor.byteOffset;
+        // we're assuming stride is 4 but that's fine for now
+        const input_data = @as([*]const f32, @ptrCast(input_buffer.ptr))[input_byte_offset .. input_byte_offset + input_accessor.count];
+        max = @max(max, input_data[input_accessor.count - 1]);
+    }
+    return max;
 }
 
 export fn gltf_scene(gltf_id: f64) f64 {
