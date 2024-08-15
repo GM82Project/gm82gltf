@@ -378,6 +378,12 @@ export fn gltf_animation_length(gltf_id: f64, animation_id: f64) f64 {
     return max;
 }
 
+export fn gltf_skin_joint_count(gltf_id: f64, skin_id: f64) f64 {
+    const gltf = get_gltf(gltf_id) orelse return -1;
+    const skin = array_get(GLTF.Skin, gltf.skins, skin_id) orelse return -1;
+    return @floatFromInt(skin.joints.len);
+}
+
 export fn gltf_skin_joints(gltf_id: f64, skin_id: f64) f64 {
     const glb = get_glb(gltf_id) orelse return -1;
     const gltf = &glb.json.value;

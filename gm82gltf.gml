@@ -14,15 +14,75 @@
     // stuff on attributes in primitives
     globalvar __gm82gltf_primitivebuffers;
 
-    globalvar __gm82gltf_shader_pixel; __gm82gltf_shader_pixel=shader_pixel_create_base64("
-        eJxFj0FqAjEUhr8kUxi6mQsUnGUVWrA9QUcP4ELoViWBloqWsYrLHGGOMPvZeKic
-        w5RkMprV938/L7wnpfdXP2G2/KieAAtI6b0EQh7ePHhAAIvkVoBK7je5ulofzGy/
-        3dd0AoUgi/2tW5rz37E2dF2X8Rj90J9+9Lt+OXyttanL6ev0rXz+/N6ZcnPc6a3R
-        4zAz6tewoC53LprEDXnRisiFBdcEFigL2SWw7H1bgRIUVuAsuWsf4ikp4+yQA0uc
-        jX/mffYe/gG5WDk3
+    globalvar __gm82gltf_shader_vertex_default; __gm82gltf_shader_vertex_default=shader_vertex_create_base64("
+        eJyFVU1rFEEQff0xsyOi8wcE5xgVFhLxEPCgBkEkATWOeguriWQxZmUTQo6t5gcM
+        mB+wB0+TSw7evPgbPHmMML8jLVVdvel1D9kc0l393uuq11W7Sp/7c38fKy8fProB
+        4CcApc+9AUB7KOAHgDcANAAHYJviAA455mABHEnsWP4rAN9lPX46Gu7urw32x8ND
+        nJycGBhYWFTxPBy9fvUM0zMVz9Y/DHcf7w7e7mxtEpeUw1/4HOxtLG0MsDZ8Nx7t
+        jd7vVwsvblVPVtdXq/XtwebWuFoZffw03NkaV8v9peX+8r2l/t3FxUU8B7IjlBPA
+        PUDyuTkts2xonQFOyVoDTstaAc6gbBYooaI7ywADlE6ja46ASZ91ylPgj8sAq1A4
+        AzSm8hMApyGmOIaZmOaYSmKaua1wa8FZxukEZxhXC66VGN1Ryx0xRnfUckeMkV4t
+        eu2pBoxC6RQ6Z9BxDZq1WtEKeWjWakUrxkirFa16qqXRsR5hwLl6ydUzD6zvRT/G
+        SN+LfoyRvhd9z/rkPUT/Cu8V74GuCX71xOu/7Jfi91ROoXW0Jp8UasnturxBk2C1
+        A7xgaV3zmt4LaGd4eoZnE55NeHaOZ2Z4RcIrEl4x5VmuqZaaWuZlUM5KTTmv05ro
+        zZsEe1FTLjURtie6uuqm2BzW9QA+L+TczJwXruD5gDEouWdyfg+6h7ghp4xxLeO0
+        9EQmOCtehjVxQs2WObVLe9JKHwUPqCd/c69d7kErHkTsxZ3zHlAPdwk25HThAc1k
+        ej6fZ6wt+neZVzZ5k+BB9GPet+hBqIvmhurynIvl/g/+kR+kSdic86Z56hKsdrnk
+        Rn7k0l85rsmcHSdYy9jg0VWZ4e3kvOA609ooz+hfLrWRV+Tl/30QZpdmPswuYXuc
+        f/Chh5y9Sj3uTXmW98QL+4J1aX87/CbRd7IDvjV3ANB3NmmQ9md0E/piob0Dv6n0
+        WYh94RjlHmJA+esrx8i3UB9gzhS6xnvgHw5sX8A=
     ")
 
     /*
+        float4x4 rMatrixW, rMatrixWVP;
+        float4x4 rJointMatrix[32];
+        bool rSkinEnabled;
+        
+        struct VS_INPUT {
+            float3 normal: NORMAL;
+            float3 tangent: TANGENT0;
+            float4 position: POSITION0;
+            float2 texcoord: TEXCOORD0;
+            int4 joints: BLENDINDICES0;
+            float4 weights: BLENDWEIGHT0;
+        };
+        
+        struct VS_OUTPUT {
+            float4 position: POSITION0;
+            float2 texcoord: TEXCOORD0;
+        };
+        
+        VS_OUTPUT main(VS_INPUT input) {
+            VS_OUTPUT output;
+            if (rSkinEnabled) {
+                float4x4 skin_mtx =
+                    rJointMatrix[input.joints.x] * input.weights.x + 
+                    rJointMatrix[input.joints.y] * input.weights.y +
+                    rJointMatrix[input.joints.z] * input.weights.z +
+                    rJointMatrix[input.joints.w] * input.weights.w;
+                input.position = mul(skin_mtx, input.position);
+                input.normal = mul(skin_mtx, float4(input.normal, 0)).xyz;
+            }
+        
+            output.position = mul(rMatrixWVP, input.position);
+            output.texcoord = input.texcoord;
+        
+            return output;
+        }
+    */
+
+    globalvar __gm82gltf_shader_pixel_default; __gm82gltf_shader_pixel_default=shader_pixel_create_base64("
+        eJxFj09qAjEUh78kIwxu5gKFztIWKoon6NgDdCG4rSWBiqIy/sFljjBHmP1sPFTO
+        0UgysX1v8/2+x3skUnr/61+ZL96rJ8ACUnovgZAf9RE8IIDP5L4AldwhubpaHc18
+        v93XdAKFIIvzv9nCXE/n2tB1XcYQEbuvy0bP9NvxZ6VNXU7H00k5Wq53pvw+7/TW
+        6Jew89w/w4K6/XPRJG7Ii1ZELiy4JrBAWchugWXv2wqUoLACZ8ldO4hfSRlnHzmw
+        xNl4M++z93AHuY45Nw==
+    ")
+
+    /*
+        SamplerState rBaseTexture: register(s0);
+        float4 rBaseColor;
+        
         struct PS_INPUT {
             float2 texcoord: TEXCOORD0;
             float4 color: COLOR0;
@@ -31,9 +91,6 @@
         struct PS_OUTPUT {
             float4 color: COLOR0;
         };
-        
-        SamplerState rBaseTexture: register(s0);
-        float4 rBaseColor: register(c0);
         
         PS_OUTPUT main(PS_INPUT input) {
             PS_OUTPUT output;
@@ -46,10 +103,13 @@
         }
     */
 
+    globalvar __gm82gltf_shader_vertex; __gm82gltf_shader_vertex=__gm82gltf_shader_vertex_default
+    globalvar __gm82gltf_shader_pixel; __gm82gltf_shader_pixel=__gm82gltf_shader_pixel_default
+
 
 #define gltf_load
     ///gltf_load(fn)
-    var __i,__j,__k,__gltf,__texfile,__accessor,__type,__usage,__stride;
+    var __i,__j,__k,__gltf,__texfile,__accessor,__stride;
     __gltf=__gltf_load(argument0)
     if (__gltf<0) return __gltf
     // load textures
@@ -130,7 +190,8 @@
         switch (argument1) {
         case 5126: __type=vf_type_float4 break
         case 5122: if (argument2) __type=vf_type_short4n else __type=vf_type_short4 break
-        case 5123: if (argument2) __type=vf_type_ushort4n break
+        // slightly cheating here and using signed shorts if not normalized
+        case 5123: if (argument2) __type=vf_type_ushort4n else __type=vf_type_short4 break
         case 5121: if (argument2) __type=vf_type_ubyte4n else __type=vf_type_ubyte4 break
         }
     break
@@ -187,6 +248,17 @@
     return __ib
 
 
+#define gltf_use_shader
+    ///gltf_use_shader([vertex,pixel])
+    if (argument_count<2) {
+        __gm82gltf_shader_vertex=__gm82gltf_shader_vertex_default
+        __gm82gltf_shader_pixel=__gm82gltf_shader_pixel_default
+    } else {
+        __gm82gltf_shader_vertex=argument[0]
+        __gm82gltf_shader_pixel=argument[1]
+    }
+
+
 #define gltf_draw_scene
     ///gltf_draw_scene(gltf,scene)
     var __i;
@@ -198,7 +270,7 @@
 
 #define gltf_draw_node
     ///gltf_draw_node(gltf,node)
-    var __i,__j,__k,__mesh_id,__cullmode,__unique_mesh_id,__unique_primitive_id,__material,__base_texture_id,__base_texture;
+    var __i,__j,__k,__mesh_id,__cullmode,__unique_mesh_id,__skin,__joints,__jointsize,__address,__unique_primitive_id,__material,__base_texture_id,__base_texture;
 
     __mesh_id=gltf_node_mesh(argument0,argument1)
     if (__mesh_id<0 && gltf_node_child_count(argument0,argument1)<=0) exit;
@@ -212,6 +284,12 @@
     // reversed from gltf spec because dx9 is left-handed
     if (d3d_transform_get_determinant()>0) __cullmode=cull_clockwise
     else __cullmode=cull_counterclockwise
+
+    __skin=gltf_node_skin(argument0,argument1)
+    if (__skin>=0) {
+        __joints=gltf_skin_joints(argument0,__skin)
+        __jointsize=4*4*4*gltf_skin_joint_count(argument0,__skin)
+    }
 
     texture_set_repeat(true)
     if (__mesh_id>=0) {
@@ -234,9 +312,25 @@
             __base_texture_id=gltf_material_base_texture(argument0,__material)
             if (__base_texture_id>=0) __base_texture=__gm82gltf_textures[argument0,__base_texture_id]
             else __base_texture=__gm82gltf_texpixel
+
+            shader_vertex_set(__gm82gltf_shader_vertex)
+
+            __address=shader_vertex_uniform_get_address("rMatrixWVP")
+            if (__address!=noone) shader_vertex_uniform_matrix(__address,mtx_world_view_projection)
+            __address=shader_vertex_uniform_get_address("rMatrixW")
+            if (__address!=noone) shader_vertex_uniform_matrix(__address,mtx_world)
+            __address=shader_vertex_uniform_get_address("rSkinEnabled")
+            if (__address!=noone) shader_vertex_uniform_b(__address,__skin>=0)
+            if (__skin>=0) {
+                __address=shader_vertex_uniform_get_address("rJointMatrix")
+                __gm82dx9_shader_vertex_uniform_f_buffer(__address,__joints,__jointsize)
+            }
             
             shader_pixel_set(__gm82gltf_shader_pixel)
-            __gm82dx9_shader_pixel_uniform_f_buffer(0,gltf_material_base_color_pointer(argument0,__material),16)
+            if (__material>=0) {
+                __address=shader_pixel_uniform_get_address("rBaseColor")
+                if (__address!=noone) __gm82dx9_shader_pixel_uniform_f_buffer(__address,gltf_material_base_color_pointer(argument0,__material),16)
+            }
             
             // bind vertex buffers
             __j=gltf_mesh_primitive_attribute_count(argument0,__mesh_id,__i)-1 repeat (__j) {
@@ -266,7 +360,7 @@
     }
 
     __i=0 repeat (gltf_node_child_count(argument0,argument1)) {
-        gltf_draw_node(argument0,gltf_node_child(argument0,argument1,i))
+        gltf_draw_node(argument0,gltf_node_child(argument0,argument1,__i))
         __i+=1
     }
 

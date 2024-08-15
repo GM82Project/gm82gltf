@@ -78,6 +78,18 @@
 					"returntype": 2
 				},
 				{
+					"name": "gltf_skin_joint_count",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_skin_joint_count(gltf,skin)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
 					"name": "gltf_skin_joints",
 					"extname": "",
 					"calltype": 12,
@@ -878,6 +890,15 @@
 					"calltype": 2,
 					"helpline": "",
 					"hidden": true,
+					"argtypes": null,
+					"returntype": 2
+				},
+				{
+					"name": "gltf_use_shader",
+					"extname": "",
+					"calltype": 2,
+					"helpline": "gltf_use_shader([vertex,pixel])",
+					"hidden": false,
 					"argtypes": null,
 					"returntype": 2
 				},
