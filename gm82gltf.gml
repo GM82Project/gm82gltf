@@ -1,4 +1,6 @@
 #define __gltf_init
+    globalvar __gm82gltf_bgpixel; __gm82gltf_bgpixel=background_create_color(1,1,c_white)
+    globalvar __gm82gltf_texpixel; __gm82gltf_texpixel=background_get_texture(__gm82gltf_bgpixel)
     globalvar __gm82gltf_backgrounds;
     globalvar __gm82gltf_textures;
     globalvar __gm82gltf_meshes;
@@ -188,7 +190,6 @@
 #define gltf_draw_scene
     ///gltf_draw_scene(gltf,scene)
     var __i;
-    show_debug_message(gltf_scene_node_count(argument0,argument1))
     __i=0 repeat (gltf_scene_node_count(argument0,argument1)) {
         gltf_draw_node(argument0,gltf_scene_node(argument0,argument1,__i))
         __i+=1
@@ -204,7 +205,7 @@
 
     d3d_transform_stack_push()
     d3d_transform_set_scaling(gltf_node_sx(argument0,argument1),gltf_node_sy(argument0,argument1),gltf_node_sz(argument0,argument1))
-    d3d_transform_add_rotation_axis(gltf_node_rx(argument0,argument1),gltf_node_ry(argument0,argument1),gltf_node_rz(argument0,argument1),(-2*180/pi)*arccos(gltf_node_rw(argument0,argument1)))
+    d3d_transform_add_rotation_axis(gltf_node_rx(argument0,argument1),gltf_node_ry(argument0,argument1),gltf_node_rz(argument0,argument1),-darccos(gltf_node_rw(argument0,argument1)))
     d3d_transform_add_translation(gltf_node_tx(argument0,argument1),gltf_node_ty(argument0,argument1),gltf_node_tz(argument0,argument1))
     d3d_transform_add_stack_top()
 
@@ -232,7 +233,7 @@
 
             __base_texture_id=gltf_material_base_texture(argument0,__material)
             if (__base_texture_id>=0) __base_texture=__gm82gltf_textures[argument0,__base_texture_id]
-            else __base_texture=background_get_texture(bgWhitePixel)
+            else __base_texture=__gm82gltf_texpixel
             
             shader_pixel_set(__gm82gltf_shader_pixel)
             __gm82dx9_shader_pixel_uniform_f_buffer(0,gltf_material_base_color_pointer(argument0,__material),16)

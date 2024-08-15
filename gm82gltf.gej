@@ -9,6 +9,7 @@
 	"helpfile": "",
 	"hidden": false,
 	"dependencies": [
+		"Game Maker 8.2 Core",
 		"Game Maker 8.2 DirectX9",
 		"Game Maker 8.2 Network"
 	],
