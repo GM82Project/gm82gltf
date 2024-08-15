@@ -300,15 +300,16 @@ export fn gltf_animate(gltf_id: f64, animation_id: f64, time: f64) f64 {
             continue;
         }
         const output_byte_offset = output_bv.byteOffset + output_accessor.byteOffset;
-        for (input_data, 0..) |keyframe, i| {
-            if (time >= keyframe) {
-                // we've found our keyframe
-                const output_offset = output_byte_offset + (output_bv.byteStride orelse 4 * output.len) * i;
+        for (input_data, 0..) |keyframe_next, i| {
+            if (time < keyframe_next) {
+                // we've found the next keyframe
+                const prev = if (i != 0) i - 1 else 0;
+                const output_offset = output_byte_offset + (output_bv.byteStride orelse 4 * output.len) * prev;
                 const output_current = @as([*]const f32, @ptrCast(output_buffer.ptr))[output_offset / 4 .. output_offset / 4 + output.len];
-                if (is_linear and i < input_accessor.count - 1) {
-                    const keyframe_next = input_data[i + 1];
+                if (is_linear and i != 0) {
+                    const keyframe_prev = input_data[prev];
                     const output_next = @as([*]const f32, @ptrCast(output_buffer.ptr))[output_offset / 4 + output.len .. output_offset + output.len * 2];
-                    const lerp = (time - keyframe) / (keyframe_next - keyframe);
+                    const lerp = (time - keyframe_prev) / (keyframe_next - keyframe_prev);
                     if (output.len == 3) {
                         // translation or scale -> straight lerp
                         const current: @Vector(3, f32) = output_current[0..3].*;
@@ -335,6 +336,9 @@ export fn gltf_animate(gltf_id: f64, animation_id: f64, time: f64) f64 {
                 continue :channels;
             }
         }
+        // we've gone through them all, so we're at the end
+        const output_offset = output_byte_offset + (output_bv.byteStride orelse 4 * output.len) * input_accessor.count - 1;
+        @memcpy(output, @as([*]const f32, @ptrCast(output_buffer.ptr))[output_offset / 4 .. output_offset / 4 + output.len]);
     }
     return 0;
 }
