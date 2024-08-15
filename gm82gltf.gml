@@ -14,94 +14,11 @@
     // stuff on attributes in primitives
     globalvar __gm82gltf_primitivebuffers;
 
-    globalvar __gm82gltf_shader_vertex_default; __gm82gltf_shader_vertex_default=shader_vertex_create_base64("
-        eJyFVU1rFEEQff0xsyOi8wcE5xgVFhLxEPCgBkEkATWOeguriWQxZmUTQo6t5gcM
-        mB+wB0+TSw7evPgbPHmMML8jLVVdvel1D9kc0l393uuq11W7Sp/7c38fKy8fProB
-        4CcApc+9AUB7KOAHgDcANAAHYJviAA455mABHEnsWP4rAN9lPX46Gu7urw32x8ND
-        nJycGBhYWFTxPBy9fvUM0zMVz9Y/DHcf7w7e7mxtEpeUw1/4HOxtLG0MsDZ8Nx7t
-        jd7vVwsvblVPVtdXq/XtwebWuFoZffw03NkaV8v9peX+8r2l/t3FxUU8B7IjlBPA
-        PUDyuTkts2xonQFOyVoDTstaAc6gbBYooaI7ywADlE6ja46ASZ91ylPgj8sAq1A4
-        AzSm8hMApyGmOIaZmOaYSmKaua1wa8FZxukEZxhXC66VGN1Ryx0xRnfUckeMkV4t
-        eu2pBoxC6RQ6Z9BxDZq1WtEKeWjWakUrxkirFa16qqXRsR5hwLl6ydUzD6zvRT/G
-        SN+LfoyRvhd9z/rkPUT/Cu8V74GuCX71xOu/7Jfi91ROoXW0Jp8UasnturxBk2C1
-        A7xgaV3zmt4LaGd4eoZnE55NeHaOZ2Z4RcIrEl4x5VmuqZaaWuZlUM5KTTmv05ro
-        zZsEe1FTLjURtie6uuqm2BzW9QA+L+TczJwXruD5gDEouWdyfg+6h7ghp4xxLeO0
-        9EQmOCtehjVxQs2WObVLe9JKHwUPqCd/c69d7kErHkTsxZ3zHlAPdwk25HThAc1k
-        ej6fZ6wt+neZVzZ5k+BB9GPet+hBqIvmhurynIvl/g/+kR+kSdic86Z56hKsdrnk
-        Rn7k0l85rsmcHSdYy9jg0VWZ4e3kvOA609ooz+hfLrWRV+Tl/30QZpdmPswuYXuc
-        f/Chh5y9Sj3uTXmW98QL+4J1aX87/CbRd7IDvjV3ANB3NmmQ9md0E/piob0Dv6n0
-        WYh94RjlHmJA+esrx8i3UB9gzhS6xnvgHw5sX8A=
-    ")
+    globalvar __gm82gltf_shader_vertex_default;
+    __gm82gltf_shader_vertex_default=shader_vertex_create_file(temp_directory+"\gm82\gltf_vertex.vs2")
 
-    /*
-        float4x4 rMatrixW, rMatrixWVP;
-        float4x4 rJointMatrix[32];
-        bool rSkinEnabled;
-        
-        struct VS_INPUT {
-            float3 normal: NORMAL;
-            float3 tangent: TANGENT0;
-            float4 position: POSITION0;
-            float2 texcoord: TEXCOORD0;
-            int4 joints: BLENDINDICES0;
-            float4 weights: BLENDWEIGHT0;
-        };
-        
-        struct VS_OUTPUT {
-            float4 position: POSITION0;
-            float2 texcoord: TEXCOORD0;
-        };
-        
-        VS_OUTPUT main(VS_INPUT input) {
-            VS_OUTPUT output;
-            if (rSkinEnabled) {
-                float4x4 skin_mtx =
-                    rJointMatrix[input.joints.x] * input.weights.x + 
-                    rJointMatrix[input.joints.y] * input.weights.y +
-                    rJointMatrix[input.joints.z] * input.weights.z +
-                    rJointMatrix[input.joints.w] * input.weights.w;
-                input.position = mul(skin_mtx, input.position);
-                input.normal = mul(skin_mtx, float4(input.normal, 0)).xyz;
-            }
-        
-            output.position = mul(rMatrixWVP, input.position);
-            output.texcoord = input.texcoord;
-        
-            return output;
-        }
-    */
-
-    globalvar __gm82gltf_shader_pixel_default; __gm82gltf_shader_pixel_default=shader_pixel_create_base64("
-        eJxFj09qAjEUh78kIwxu5gKFztIWKoon6NgDdCG4rSWBiqIy/sFljjBHmP1sPFTO
-        0UgysX1v8/2+x3skUnr/61+ZL96rJ8ACUnovgZAf9RE8IIDP5L4AldwhubpaHc18
-        v93XdAKFIIvzv9nCXE/n2tB1XcYQEbuvy0bP9NvxZ6VNXU7H00k5Wq53pvw+7/TW
-        6Jew89w/w4K6/XPRJG7Ii1ZELiy4JrBAWchugWXv2wqUoLACZ8ldO4hfSRlnHzmw
-        xNl4M++z93AHuY45Nw==
-    ")
-
-    /*
-        SamplerState rBaseTexture: register(s0);
-        float4 rBaseColor;
-        
-        struct PS_INPUT {
-            float2 texcoord: TEXCOORD0;
-            float4 color: COLOR0;
-        };
-        
-        struct PS_OUTPUT {
-            float4 color: COLOR0;
-        };
-        
-        PS_OUTPUT main(PS_INPUT input) {
-            PS_OUTPUT output;
-        
-            float4 albedo = tex2D(rBaseTexture, input.texcoord);
-        
-            output.color = albedo * input.color * rBaseColor;
-            
-            return output;
-        }
-    */
+    globalvar __gm82gltf_shader_pixel_default;
+    __gm82gltf_shader_pixel_default=shader_pixel_create_file(temp_directory+"\gm82\gltf_pixel.ps2")
 
     globalvar __gm82gltf_shader_vertex; __gm82gltf_shader_vertex=__gm82gltf_shader_vertex_default
     globalvar __gm82gltf_shader_pixel; __gm82gltf_shader_pixel=__gm82gltf_shader_pixel_default

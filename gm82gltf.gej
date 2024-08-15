@@ -928,6 +928,24 @@
 				}
 			],
 			"constants": []
+		},
+		{
+			"filename": "gltf_pixel.ps2",
+			"origname": "zig-out/pixel.ps2",
+			"kind": 4,
+			"init": "",
+			"final": "",
+			"functions": [],
+			"constants": []
+		},
+		{
+			"filename": "gltf_vertex.vs2",
+			"origname": "zig-out/vertex.vs2",
+			"kind": 4,
+			"init": "",
+			"final": "",
+			"functions": [],
+			"constants": []
 		}
 	]
 }
