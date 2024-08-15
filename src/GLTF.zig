@@ -30,7 +30,7 @@ pub const Accessor = struct {
 pub const Animation = struct {
     pub const Channel = struct {
         pub const Target = struct {
-            node: ?usize = null,
+            node: usize, // can technically be undefined but we don't do extensions
             path: []const u8,
         };
         sampler: usize,

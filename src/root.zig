@@ -5,7 +5,7 @@ const testing = std.testing;
 const GLB = struct {
     arena: std.heap.ArenaAllocator,
     json: std.json.Parsed(GLTF),
-    buffers: [][]const u8,
+    buffers: [][]align(4) const u8,
     fn deinit(self: @This()) void {
         self.json.deinit();
     }
@@ -32,6 +32,19 @@ fn return_string(string: []const u8) [*:0]const u8 {
 // INTERNAL GETTERS
 
 fn array_get(T: type, array: ?[]const T, id: anytype) ?*const T {
+    const array_real = array orelse return null;
+    const id_i: usize = switch (@TypeOf(id)) {
+        ?usize => id orelse return null,
+        usize => id,
+        f64 => @intFromFloat(id),
+        else => @compileError("unknown id type"),
+    };
+    if (id_i >= array_real.len) {
+        return null;
+    }
+    return &array_real[id_i];
+}
+fn array_get_mut(T: type, array: ?[]T, id: anytype) ?*T {
     const array_real = array orelse return null;
     const id_i: usize = switch (@TypeOf(id)) {
         ?usize => id orelse return null,
@@ -184,7 +197,7 @@ export fn __gltf_load(filename: [*:0]const u8) f64 {
         defer temp_alloc.deinit();
 
         var json_parsed: ?std.json.Parsed(GLTF) = null;
-        var glb_binary: ?[]const u8 = null;
+        var glb_binary: ?[]align(4) const u8 = null;
 
         var remaining_length = fileLength - 12;
         while (remaining_length > 0) {
@@ -218,7 +231,7 @@ export fn __gltf_load(filename: [*:0]const u8) f64 {
         const parsed = json_parsed orelse break :blk;
 
         const buffer_count = (parsed.value.buffers orelse &[0]GLTF.Buffer{}).len;
-        const buffers = owned_alloc.allocator().alloc([]const u8, buffer_count) catch break :blk;
+        const buffers = owned_alloc.allocator().alloc([]align(4) const u8, buffer_count) catch break :blk;
 
         if (parsed.value.buffers) |bufferData| {
             for (bufferData, 0..) |buffer, i| {
@@ -253,6 +266,76 @@ export fn __gltf_load(filename: [*:0]const u8) f64 {
 export fn gltf_destroy(id: f64) f64 {
     const entry = g_gltfs.fetchSwapRemove(@intFromFloat(id)) orelse return 0;
     entry.value.deinit();
+    return 0;
+}
+
+export fn gltf_animate(gltf_id: f64, animation_id: f64, time: f64) f64 {
+    const glb = get_glb(gltf_id) orelse return -1;
+    const gltf = &glb.json.value;
+    const animation = array_get(GLTF.Animation, gltf.animations, animation_id) orelse return -1;
+    channels: for (animation.channels) |channel| {
+        const node = array_get_mut(GLTF.Node, gltf.nodes, channel.target.node) orelse continue;
+        const output: []f32 = if (std.mem.eql(u8, channel.target.path, "translation")) &node.translation else if (std.mem.eql(u8, channel.target.path, "scale")) &node.scale else if (std.mem.eql(u8, channel.target.path, "rotation")) &node.rotation else continue;
+        const sampler = animation.samplers[channel.sampler];
+        if (std.mem.eql(u8, sampler.interpolation, "CUBICSPLINE")) {
+            // unsupported
+            continue;
+        }
+        const is_linear = std.mem.eql(u8, sampler.interpolation, "LINEAR");
+        const input_accessor = array_get(GLTF.Accessor, gltf.accessors, sampler.input) orelse continue;
+        if (input_accessor.componentType != 5126) {
+            // only floats are supported for input
+            continue;
+        }
+        const input_bv = array_get(GLTF.BufferView, gltf.bufferViews, input_accessor.bufferView) orelse continue;
+        const input_buffer = array_get([]align(4) const u8, glb.buffers, input_bv.buffer) orelse continue;
+        const input_byte_offset = input_bv.byteOffset + input_accessor.byteOffset;
+        // we're assuming stride is 4 but that's fine for now
+        const input_data = @as([*]const f32, @ptrCast(input_buffer.ptr))[input_byte_offset .. input_byte_offset + input_accessor.count];
+        const output_accessor = array_get(GLTF.Accessor, gltf.accessors, sampler.output) orelse continue;
+        const output_bv = array_get(GLTF.BufferView, gltf.bufferViews, output_accessor.bufferView) orelse continue;
+        const output_buffer = array_get([]align(4) const u8, glb.buffers, output_bv.buffer) orelse continue;
+        if (output_accessor.componentType != 5126) {
+            // let's just pretend only floats exist for now
+            continue;
+        }
+        const output_byte_offset = output_bv.byteOffset + output_accessor.byteOffset;
+        for (input_data, 0..) |keyframe, i| {
+            if (time >= keyframe) {
+                // we've found our keyframe
+                const output_offset = output_byte_offset + (output_bv.byteStride orelse 4 * output.len) * i;
+                const output_current = @as([*]const f32, @ptrCast(output_buffer.ptr))[output_offset / 4 .. output_offset / 4 + output.len];
+                if (is_linear and i < input_accessor.count - 1) {
+                    const keyframe_next = input_data[i + 1];
+                    const output_next = @as([*]const f32, @ptrCast(output_buffer.ptr))[output_offset / 4 + output.len .. output_offset + output.len * 2];
+                    const lerp = (time - keyframe) / (keyframe_next - keyframe);
+                    if (output.len == 3) {
+                        // translation or scale -> straight lerp
+                        const current: @Vector(3, f32) = output_current[0..3].*;
+                        const current_next: @Vector(3, f32) = output_next[0..3].*;
+                        const lerpsplat: @Vector(3, f32) = @splat(@floatCast(lerp));
+                        const lerped: @Vector(3, f32) = std.math.lerp(current, current_next, lerpsplat);
+                        @memcpy(output[0..3], @as([3]f32, lerped)[0..]);
+                    } else {
+                        // rotation -> slerp
+                        const current: @Vector(4, f32) = output_current[0..4].*;
+                        const current_next: @Vector(4, f32) = output_next[0..4].*;
+                        const dot = @reduce(.Add, current * current_next);
+                        const a = std.math.acos(@abs(dot));
+                        const s: @Vector(4, f32) = @splat(dot / @abs(dot));
+                        const sina: @Vector(4, f32) = @splat(@sin(a));
+                        const sinat: @Vector(4, f32) = @splat(@floatCast(@sin(a * lerp)));
+                        const sina1t: @Vector(4, f32) = @splat(@floatCast(@sin(a * (1 - lerp))));
+                        const slerped = @mulAdd(@TypeOf(current), sina1t / sina, current, s * (sinat / sina) * current_next);
+                        @memcpy(output[0..4], @as([4]f32, slerped)[0..]);
+                    }
+                } else {
+                    @memcpy(output, output_current);
+                }
+                continue :channels;
+            }
+        }
+    }
     return 0;
 }
 

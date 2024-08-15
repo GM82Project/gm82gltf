@@ -1,5 +1,5 @@
 {
-	"name": "Game Maker 8.2 GLTF",
+	"name": "Game Maker 8.2 glTF",
 	"folder": "gm82",
 	"version": "1.0",
 	"author": "Floogle",
@@ -47,6 +47,19 @@
 					"helpline": "",
 					"hidden": false,
 					"argtypes": [
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_animate",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2,
 						2
 					],
 					"returntype": 2
