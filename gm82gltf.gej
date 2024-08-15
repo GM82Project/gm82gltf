@@ -78,6 +78,18 @@
 					"returntype": 2
 				},
 				{
+					"name": "gltf_skin_joints",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_skin_joints(gltf,skin)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
 					"name": "gltf_scene",
 					"extname": "",
 					"calltype": 12,
@@ -286,7 +298,19 @@
 					"name": "gltf_node_mesh",
 					"extname": "",
 					"calltype": 12,
-					"helpline": "gltf_node_mesh(gltf,mesh)",
+					"helpline": "gltf_node_mesh(gltf,node)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_skin",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_node_skin(gltf,node)",
 					"hidden": false,
 					"argtypes": [
 						2,

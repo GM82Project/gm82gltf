@@ -15,7 +15,7 @@ var g_allocator = std.heap.GeneralPurposeAllocator(.{}){};
 var g_gltfs = std.AutoArrayHashMap(i32, GLB).init(g_allocator.allocator());
 var g_gltf_next_id: i32 = 1;
 var g_stringret: ?[:0]u8 = null;
-var g_matrix: [16]f32 = undefined;
+var g_matrices = std.ArrayList([16]f32).init(g_allocator.allocator());
 
 fn return_string(string: []const u8) [*:0]const u8 {
     // make new string
@@ -114,26 +114,25 @@ fn get_buffer_view(glb: *GLB, id: usize) ?[]const u8 {
     return glb.buffers[bv.buffer][bv.byteOffset .. bv.byteOffset + bv.byteLength];
 }
 
-fn create_transform(node: *GLTF.Node) [16]f32 {
-    var out: [16]f32 = undefined;
+fn create_transform(node: *const GLTF.Node) [16]f32 {
+    var out: [4]@Vector(4, f32) = undefined;
     const qx = node.rotation[0];
     const qxx = qx * qx;
     const qy = node.rotation[1];
     const qyy = qy * qy;
     const qz = node.rotation[2];
     const qzz = qz * qz;
-    const qw = node.rotation[4];
+    const qw = node.rotation[3];
 
     const scaling_row1 = @Vector(4, f32){ 1 - 2 * qyy - 2 * qzz, 2 * qx * qy - 2 * qz * qw, 2 * qx * qz - 2 * qy * qw, 0 };
     const scaling_row2 = @Vector(4, f32){ 2 * qx * qy, 1 - 2 * qxx - 2 * qzz, 2 * qy * qz + 2 * qx * qw, 0 };
     const scaling_row3 = @Vector(4, f32){ 2 * qx * qz + 2 * qy * qw, 2 * qy * qz - 2 * qx * qw, 1 - 2 * qxx - 2 * qyy, 0 };
-    @memcpy(out[0..4], scaling_row1 * @as(@Vector(4, f32), @splat(node.scale[0])));
-    @memcpy(out[4..8], scaling_row2 * @as(@Vector(4, f32), @splat(node.scale[1])));
-    @memcpy(out[8..12], scaling_row3 * @as(@Vector(4, f32), @splat(node.scale[2])));
-    @memcpy(out[12..15], node.translation);
-    out[15] = 1;
+    out[0] = scaling_row1 * @as(@Vector(4, f32), @splat(node.scale[0]));
+    out[1] = scaling_row2 * @as(@Vector(4, f32), @splat(node.scale[1]));
+    out[2] = scaling_row3 * @as(@Vector(4, f32), @splat(node.scale[2]));
+    out[3] = .{ node.translation[0], node.translation[1], node.translation[2], 1 };
 
-    return out;
+    return @bitCast(out);
 }
 
 fn multiply_matrices(m_a: [16]f32, m_b: [16]f32) [16]f32 {
@@ -145,7 +144,8 @@ fn multiply_matrices(m_a: [16]f32, m_b: [16]f32) [16]f32 {
     };
     var out: [16]f32 = undefined;
     for (0..4) |y| {
-        const a_row: @Vector(4, f32) = m_a[y * 4 .. y * 4 + 4];
+        const a_row_slice = m_a[y * 4 .. y * 4 + 4];
+        const a_row: @Vector(4, f32) = a_row_slice[0..4].*;
         for (0..4) |x| {
             out[y * 4 + x] = @reduce(.Add, a_row * b_transposed[y]);
         }
@@ -246,6 +246,17 @@ export fn __gltf_load(filename: [*:0]const u8) f64 {
                 }
                 // for now, we count these as invalid
                 break :blk;
+            }
+        }
+
+        // assign parents
+        if (parsed.value.nodes) |nodes| {
+            for (nodes, 0..) |node, i| {
+                if (node.children) |children| {
+                    for (children) |child| {
+                        nodes[child].parent = i;
+                    }
+                }
             }
         }
 
@@ -367,6 +378,40 @@ export fn gltf_animation_length(gltf_id: f64, animation_id: f64) f64 {
     return max;
 }
 
+export fn gltf_skin_joints(gltf_id: f64, skin_id: f64) f64 {
+    const glb = get_glb(gltf_id) orelse return -1;
+    const gltf = &glb.json.value;
+    const skin = array_get(GLTF.Skin, gltf.skins, skin_id) orelse return -1;
+    var ibm_data: ?[]const f32 = null;
+    var ibm_offset: usize = 0;
+    var ibm_stride: usize = 0;
+    blk: {
+        const ibm_accessor = array_get(GLTF.Accessor, gltf.accessors, skin.inverseBindMatrices) orelse break :blk;
+        const ibm_bv = array_get(GLTF.BufferView, gltf.bufferViews, ibm_accessor.bufferView) orelse break :blk;
+        const ibm_buffer = array_get([]const u8, glb.buffers, ibm_bv.buffer) orelse break :blk;
+        ibm_stride = (ibm_bv.byteStride orelse 16 * 4) / 4;
+        ibm_offset = (ibm_bv.byteOffset + ibm_accessor.byteOffset) / 4;
+        ibm_data = @as([*]const f32, @ptrCast(ibm_buffer))[ibm_offset .. ibm_offset + ibm_accessor.count * ibm_stride];
+    }
+    g_matrices.clearRetainingCapacity();
+    g_matrices.ensureTotalCapacity(skin.joints.len) catch return -1;
+    for (skin.joints, 0..) |joint, i| {
+        var node = array_get(GLTF.Node, gltf.nodes, joint) orelse return -1;
+        var matrix = create_transform(node);
+        while (node.parent) |parent| {
+            node = array_get(GLTF.Node, gltf.nodes, node.parent) orelse return -1;
+            matrix = multiply_matrices(create_transform(node), matrix);
+            if (parent == skin.skeleton) break;
+        }
+        if (ibm_data) |data| {
+            const matrix_ptr = data[i * ibm_stride .. i * ibm_stride + 16];
+            matrix = multiply_matrices(matrix, matrix_ptr[0..16].*);
+        }
+        g_matrices.addOneAssumeCapacity().* = matrix;
+    }
+    return @floatFromInt(@intFromPtr(g_matrices.items.ptr));
+}
+
 export fn gltf_scene(gltf_id: f64) f64 {
     const gltf = get_gltf(gltf_id) orelse return -1;
     return @floatFromInt(gltf.scene orelse return -1);
@@ -468,6 +513,11 @@ export fn gltf_node_camera(gltf_id: f64, node_id: f64) f64 {
 export fn gltf_node_mesh(gltf_id: f64, node_id: f64) f64 {
     const node = get_node(gltf_id, node_id) orelse return -1;
     return @floatFromInt(node.mesh orelse return -1);
+}
+
+export fn gltf_node_skin(gltf_id: f64, node_id: f64) f64 {
+    const node = get_node(gltf_id, node_id) orelse return -1;
+    return @floatFromInt(node.skin orelse return -1);
 }
 
 export fn gltf_camera_type(gltf_id: f64, camera_id: f64) [*:0]const u8 {
