@@ -166,7 +166,7 @@
         __ibtype=ib_format_16
         __src=buffer_create()
         buffer_set_size(__src,__size)
-        gltf_accessor_copy(argument0,argument1,buffer_get_address(__src,0))
+        gltf_accessor_copy(argument0,argument1,buffer_get_address(__src,0),buffer_get_size(__src))
         __dst=buffer_create()
         buffer_set_pos(__src,0)
         if (__type==5121) {

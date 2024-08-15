@@ -539,16 +539,21 @@ export fn gltf_accessor_stride(gltf_id: f64, accessor_id: f64) f64 {
     return @floatFromInt(bv.byteStride orelse return -1);
 }
 
-export fn gltf_accessor_copy(gltf_id: f64, accessor_id: f64, address: f64) f64 {
+export fn gltf_accessor_copy(gltf_id: f64, accessor_id: f64, dest_address: f64, dest_size: f64) f64 {
+    const dest_address_i: usize = @intFromFloat(dest_address);
+    const dest_ptr: [*]u8 = @ptrFromInt(dest_address_i);
+    const dest: []u8 = dest_ptr[0..@intFromFloat(dest_size)];
     const glb = get_glb(gltf_id) orelse return -1;
     const gltf = &glb.json.value;
     const accessor = array_get(GLTF.Accessor, gltf.accessors, accessor_id) orelse return -1;
     const bv = array_get(GLTF.BufferView, gltf.bufferViews, accessor.bufferView) orelse return -1;
-    const data = array_get([]const u8, glb.buffers, bv.buffer) orelse return -1;
-    const address_i: usize = @intFromFloat(address);
-    const dest: [*]u8 = @ptrFromInt(address_i);
+    const buffer = array_get([]const u8, glb.buffers, bv.buffer) orelse return -1;
     // TODO copy accessor instead of buffer view
-    @memcpy(dest[0..bv.byteLength], data.*[bv.byteOffset..bv.byteLength]);
+    const data = buffer.*[bv.byteOffset .. bv.byteOffset + bv.byteLength];
+    if (dest.len != data.len) {
+        return -1;
+    }
+    std.mem.copyForwards(u8, dest, data);
     return 0;
 }
 
