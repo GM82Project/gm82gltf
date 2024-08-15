@@ -205,7 +205,7 @@
 
     d3d_transform_stack_push()
     d3d_transform_set_scaling(gltf_node_sx(argument0,argument1),gltf_node_sy(argument0,argument1),gltf_node_sz(argument0,argument1))
-    d3d_transform_add_rotation_axis(gltf_node_rx(argument0,argument1),gltf_node_ry(argument0,argument1),gltf_node_rz(argument0,argument1),-darccos(gltf_node_rw(argument0,argument1)))
+    d3d_transform_add_rotation_axis(gltf_node_rx(argument0,argument1),gltf_node_ry(argument0,argument1),gltf_node_rz(argument0,argument1),-2*darccos(gltf_node_rw(argument0,argument1)))
     d3d_transform_add_translation(gltf_node_tx(argument0,argument1),gltf_node_ty(argument0,argument1),gltf_node_tz(argument0,argument1))
     d3d_transform_add_stack_top()
 
