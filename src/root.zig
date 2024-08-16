@@ -147,7 +147,7 @@ fn multiply_matrices(m_a: [16]f32, m_b: [16]f32) [16]f32 {
         const a_row_slice = m_a[y * 4 .. y * 4 + 4];
         const a_row: @Vector(4, f32) = a_row_slice[0..4].*;
         for (0..4) |x| {
-            out[y * 4 + x] = @reduce(.Add, a_row * b_transposed[y]);
+            out[y * 4 + x] = @reduce(.Add, a_row * b_transposed[x]);
         }
     }
     return out;
@@ -394,10 +394,10 @@ export fn gltf_skin_joints(gltf_id: f64, skin_id: f64) f64 {
     blk: {
         const ibm_accessor = array_get(GLTF.Accessor, gltf.accessors, skin.inverseBindMatrices) orelse break :blk;
         const ibm_bv = array_get(GLTF.BufferView, gltf.bufferViews, ibm_accessor.bufferView) orelse break :blk;
-        const ibm_buffer = array_get([]const u8, glb.buffers, ibm_bv.buffer) orelse break :blk;
-        ibm_stride = (ibm_bv.byteStride orelse 16 * 4) / 4;
+        const ibm_buffer = array_get([]align(4) const u8, glb.buffers, ibm_bv.buffer) orelse break :blk;
+        ibm_stride = (ibm_bv.byteStride orelse (16 * 4)) / 4;
         ibm_offset = (ibm_bv.byteOffset + ibm_accessor.byteOffset) / 4;
-        ibm_data = @as([*]const f32, @ptrCast(ibm_buffer))[ibm_offset .. ibm_offset + ibm_accessor.count * ibm_stride];
+        ibm_data = @as([*]const f32, @ptrCast(ibm_buffer.ptr))[ibm_offset .. ibm_offset + ibm_accessor.count * ibm_stride];
     }
     g_matrices.clearRetainingCapacity();
     g_matrices.ensureTotalCapacity(skin.joints.len) catch return -1;
@@ -821,4 +821,33 @@ test "gltf stuff" {
     try testing.expectEqual(648, g_gltfs.get(1).?.buffers[0].len);
     try testing.expectEqualStrings("NORMAL", std.mem.span(gltf_mesh_primitive_attribute_semantic(1, 0, 0, 0)));
     try testing.expectEqual(0, gltf_destroy(1));
+}
+
+test "matrices" {
+    const node = GLTF.Node{
+        .translation = .{ 1, 2, 3 },
+        .scale = .{ 4, 5, 6 },
+    };
+    try testing.expectEqualSlices(f32, &.{
+        4, 0, 0, 0,
+        0, 5, 0, 0,
+        0, 0, 6, 0,
+        1, 2, 3, 1,
+    }, &create_transform(&node));
+    try testing.expectEqualSlices(f32, &.{
+        60,  69,  48,  43,
+        144, 165, 120, 119,
+        228, 261, 192, 195,
+        312, 357, 264, 271,
+    }, &multiply_matrices(.{
+        1,  2,  3,  4,
+        5,  6,  7,  8,
+        9,  10, 11, 12,
+        13, 14, 15, 16,
+    }, .{
+        1, 2, 3, 7,
+        8, 7, 5, 4,
+        5, 7, 5, 4,
+        7, 8, 5, 4,
+    }));
 }
