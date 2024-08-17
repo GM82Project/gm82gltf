@@ -78,6 +78,18 @@
 					"returntype": 2
 				},
 				{
+					"name": "gltf_skin_skeleton",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_skin_skeleton(gltf,skin)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
 					"name": "gltf_skin_joint_count",
 					"extname": "",
 					"calltype": 12,
@@ -262,6 +274,18 @@
 					"extname": "",
 					"calltype": 12,
 					"helpline": "gltf_node_sz(gltf,node)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_parent",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_node_parent(gltf,node)",
 					"hidden": false,
 					"argtypes": [
 						2,

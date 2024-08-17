@@ -189,12 +189,6 @@
     __mesh_id=gltf_node_mesh(argument0,argument1)
     if (__mesh_id<0 && gltf_node_child_count(argument0,argument1)<=0) exit;
 
-    d3d_transform_stack_push()
-    d3d_transform_set_scaling(gltf_node_sx(argument0,argument1),gltf_node_sy(argument0,argument1),gltf_node_sz(argument0,argument1))
-    d3d_transform_add_rotation_axis(gltf_node_rx(argument0,argument1),gltf_node_ry(argument0,argument1),gltf_node_rz(argument0,argument1),-2*darccos(gltf_node_rw(argument0,argument1)))
-    d3d_transform_add_translation(gltf_node_tx(argument0,argument1),gltf_node_ty(argument0,argument1),gltf_node_tz(argument0,argument1))
-    d3d_transform_add_stack_top()
-
     // reversed from gltf spec because dx9 is left-handed
     if (d3d_transform_get_determinant()>0) __cullmode=cull_clockwise
     else __cullmode=cull_counterclockwise
@@ -203,6 +197,19 @@
     if (__skin>=0) {
         __joints=gltf_skin_joints(argument0,__skin)
         __jointsize=4*4*4*gltf_skin_joint_count(argument0,__skin)
+    }
+
+    d3d_transform_stack_push()
+    d3d_transform_set_scaling(gltf_node_sx(argument0,argument1),gltf_node_sy(argument0,argument1),gltf_node_sz(argument0,argument1))
+    d3d_transform_add_rotation_axis(gltf_node_rx(argument0,argument1),gltf_node_ry(argument0,argument1),gltf_node_rz(argument0,argument1),-2*darccos(gltf_node_rw(argument0,argument1)))
+    d3d_transform_add_translation(gltf_node_tx(argument0,argument1),gltf_node_ty(argument0,argument1),gltf_node_tz(argument0,argument1))
+    d3d_transform_add_stack_top()
+
+    // not sure what the correct logic here is but this seems to work
+    // see after for loop
+    if (__skin>=0) {
+        d3d_transform_stack_push()
+        d3d_transform_set_identity()
     }
 
     texture_set_repeat(true)
@@ -272,6 +279,9 @@
             d3d_set_alphatest(false,0,0)
         }
     }
+
+    // see before for loop
+    if (__skin>=0) d3d_transform_stack_pop()
 
     __i=0 repeat (gltf_node_child_count(argument0,argument1)) {
         gltf_draw_node(argument0,gltf_node_child(argument0,argument1,__i))

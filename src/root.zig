@@ -393,6 +393,12 @@ export fn gltf_animation_length(gltf_id: f64, animation_id: f64) f64 {
     return max;
 }
 
+export fn gltf_skin_skeleton(gltf_id: f64, skin_id: f64) f64 {
+    const gltf = get_gltf(gltf_id) orelse return -1;
+    const skin = array_get(GLTF.Skin, gltf.skins, skin_id) orelse return -1;
+    return @floatFromInt(skin.skeleton orelse return -1);
+}
+
 export fn gltf_skin_joint_count(gltf_id: f64, skin_id: f64) f64 {
     const gltf = get_gltf(gltf_id) orelse return -1;
     const skin = array_get(GLTF.Skin, gltf.skins, skin_id) orelse return -1;
@@ -512,6 +518,11 @@ export fn gltf_node_sy(gltf_id: f64, node_id: f64) f64 {
 export fn gltf_node_sz(gltf_id: f64, node_id: f64) f64 {
     const node = get_node(gltf_id, node_id) orelse return -1;
     return node.scale[2];
+}
+
+export fn gltf_node_parent(gltf_id: f64, node_id: f64) f64 {
+    const node = get_node(gltf_id, node_id) orelse return -1;
+    return @floatFromInt(node.parent orelse return -1);
 }
 
 export fn gltf_node_child_count(gltf_id: f64, node_id: f64) f64 {
