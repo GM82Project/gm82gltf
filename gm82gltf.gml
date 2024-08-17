@@ -167,13 +167,13 @@
 
 #define gltf_animate
     ///gltf_animate(gltf,animation,time)
-    if (is_string(argument1)) return __gltf_animate(argument0,gltf_get_animation(argument1),argument2)
+    if (is_string(argument1)) return __gltf_animate(argument0,gltf_get_animation(argument0,argument1),argument2)
     else return __gltf_animate(argument0,argument1,argument2)
 
 
 #define gltf_animation_length
     ///gltf_animation_length(gltf,animation)
-    if (is_string(argument1)) return __gltf_animation_length(argument0,gltf_get_animation(argument1))
+    if (is_string(argument1)) return __gltf_animation_length(argument0,gltf_get_animation(argument0,argument1))
     else __gltf_animation_length(argument0,argument1)
 
 
@@ -188,7 +188,7 @@
 #define gltf_draw_scene
     ///gltf_draw_scene(gltf,scene)
     var __i,__scene;
-    if (is_string(argument1)) __scene=gltf_get_scene(argument1)
+    if (is_string(argument1)) __scene=gltf_get_scene(argument0,argument1)
     else __scene=argument1
     __i=0 repeat (gltf_scene_node_count(argument0,__scene)) {
         gltf_draw_node(argument0,gltf_scene_node(argument0,__scene,__i))
@@ -200,7 +200,7 @@
     ///gltf_draw_node(gltf,node)
     var __i,__j,__k,__node,__mesh_id,__cullmode,__unique_mesh_id,__skin,__joints,__jointsize,__address,__unique_primitive_id,__material,__base_texture_id,__base_texture;
 
-    if (is_string(argument1)) __node=gltf_get_node(argument1)
+    if (is_string(argument1)) __node=gltf_get_node(argument0,argument1)
     else __node=argument1
 
     __mesh_id=gltf_node_mesh(argument0,__node)
