@@ -65,11 +65,11 @@
 					"returntype": 2
 				},
 				{
-					"name": "gltf_animate",
+					"name": "__gltf_animate",
 					"extname": "",
 					"calltype": 12,
-					"helpline": "gltf_animate(gltf,animation,time)",
-					"hidden": false,
+					"helpline": "__gltf_animate(gltf,animation,time)",
+					"hidden": true,
 					"argtypes": [
 						2,
 						2,
@@ -78,11 +78,11 @@
 					"returntype": 2
 				},
 				{
-					"name": "gltf_animation_length",
+					"name": "__gltf_animation_length",
 					"extname": "",
 					"calltype": 12,
-					"helpline": "gltf_animation_length(gltf,animation)",
-					"hidden": false,
+					"helpline": "__gltf_animation_length(gltf,animation)",
+					"hidden": true,
 					"argtypes": [
 						2,
 						2
@@ -133,6 +133,18 @@
 					"hidden": false,
 					"argtypes": [
 						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_get_scene",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_get_scene(gltf,scenename)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						1
 					],
 					"returntype": 2
 				},
@@ -927,6 +939,31 @@
 					"helpline": "",
 					"hidden": true,
 					"argtypes": null,
+					"returntype": 2
+				},
+				{
+					"name": "gltf_animate",
+					"extname": "",
+					"calltype": 2,
+					"helpline": "gltf_animate(gltf,animation,time)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_animation_length",
+					"extname": "",
+					"calltype": 2,
+					"helpline": "gltf_animation_length(gltf,animation)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
 					"returntype": 2
 				},
 				{

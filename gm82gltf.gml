@@ -165,6 +165,18 @@
     return __ib
 
 
+#define gltf_animate
+    ///gltf_animate(gltf,animation,time)
+    if (is_string(argument1)) return __gltf_animate(argument0,gltf_get_animation(argument1),argument2)
+    else return __gltf_animate(argument0,argument1,argument2)
+
+
+#define gltf_animation_length
+    ///gltf_animation_length(gltf,animation)
+    if (is_string(argument1)) return __gltf_animation_length(argument0,gltf_get_animation(argument1))
+    else __gltf_animation_length(argument0,argument1)
+
+
 #define gltf_use_shader
     ///gltf_use_shader([vertex,pixel])
     __gm82gltf_shader_vertex=__gm82gltf_shader_vertex_default
@@ -175,34 +187,39 @@
 
 #define gltf_draw_scene
     ///gltf_draw_scene(gltf,scene)
-    var __i;
-    __i=0 repeat (gltf_scene_node_count(argument0,argument1)) {
-        gltf_draw_node(argument0,gltf_scene_node(argument0,argument1,__i))
+    var __i,__scene;
+    if (is_string(argument1)) __scene=gltf_get_scene(argument1)
+    else __scene=argument1
+    __i=0 repeat (gltf_scene_node_count(argument0,__scene)) {
+        gltf_draw_node(argument0,gltf_scene_node(argument0,__scene,__i))
         __i+=1
     }
 
 
 #define gltf_draw_node
     ///gltf_draw_node(gltf,node)
-    var __i,__j,__k,__mesh_id,__cullmode,__unique_mesh_id,__skin,__joints,__jointsize,__address,__unique_primitive_id,__material,__base_texture_id,__base_texture;
+    var __i,__j,__k,__node,__mesh_id,__cullmode,__unique_mesh_id,__skin,__joints,__jointsize,__address,__unique_primitive_id,__material,__base_texture_id,__base_texture;
 
-    __mesh_id=gltf_node_mesh(argument0,argument1)
-    if (__mesh_id<0 && gltf_node_child_count(argument0,argument1)<=0) exit;
+    if (is_string(argument1)) __node=gltf_get_node(argument1)
+    else __node=argument1
+
+    __mesh_id=gltf_node_mesh(argument0,__node)
+    if (__mesh_id<0 && gltf_node_child_count(argument0,__node)<=0) exit;
 
     // reversed from gltf spec because dx9 is left-handed
     if (d3d_transform_get_determinant()>0) __cullmode=cull_clockwise
     else __cullmode=cull_counterclockwise
 
-    __skin=gltf_node_skin(argument0,argument1)
+    __skin=gltf_node_skin(argument0,__node)
     if (__skin>=0) {
         __joints=gltf_skin_joints(argument0,__skin)
         __jointsize=4*4*4*gltf_skin_joint_count(argument0,__skin)
     }
 
     d3d_transform_stack_push()
-    d3d_transform_set_scaling(gltf_node_sx(argument0,argument1),gltf_node_sy(argument0,argument1),gltf_node_sz(argument0,argument1))
-    d3d_transform_add_rotation_axis(gltf_node_rx(argument0,argument1),gltf_node_ry(argument0,argument1),gltf_node_rz(argument0,argument1),-2*darccos(gltf_node_rw(argument0,argument1)))
-    d3d_transform_add_translation(gltf_node_tx(argument0,argument1),gltf_node_ty(argument0,argument1),gltf_node_tz(argument0,argument1))
+    d3d_transform_set_scaling(gltf_node_sx(argument0,__node),gltf_node_sy(argument0,__node),gltf_node_sz(argument0,__node))
+    d3d_transform_add_rotation_axis(gltf_node_rx(argument0,__node),gltf_node_ry(argument0,__node),gltf_node_rz(argument0,__node),-2*darccos(gltf_node_rw(argument0,__node)))
+    d3d_transform_add_translation(gltf_node_tx(argument0,__node),gltf_node_ty(argument0,__node),gltf_node_tz(argument0,__node))
     d3d_transform_add_stack_top()
 
     // "Only the joint transforms are applied to the skinned mesh; the transform of the skinned mesh node MUST be ignored."
@@ -283,8 +300,8 @@
     // see before for loop
     if (__skin>=0) d3d_transform_stack_pop()
 
-    __i=0 repeat (gltf_node_child_count(argument0,argument1)) {
-        gltf_draw_node(argument0,gltf_node_child(argument0,argument1,__i))
+    __i=0 repeat (gltf_node_child_count(argument0,__node)) {
+        gltf_draw_node(argument0,gltf_node_child(argument0,__node,__i))
         __i+=1
     }
 

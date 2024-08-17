@@ -307,7 +307,7 @@ export fn gltf_get_animation(gltf_id: f64, animation_name: [*:0]const u8) f64 {
     return -1;
 }
 
-export fn gltf_animate(gltf_id: f64, animation_id: f64, time: f64) f64 {
+export fn __gltf_animate(gltf_id: f64, animation_id: f64, time: f64) f64 {
     const glb = get_glb(gltf_id) orelse return -1;
     const gltf = &glb.json.value;
     const animation = array_get(GLTF.Animation, gltf.animations, animation_id) orelse return -1;
@@ -390,7 +390,7 @@ export fn gltf_animate(gltf_id: f64, animation_id: f64, time: f64) f64 {
     return @floatFromInt(@intFromBool(done));
 }
 
-export fn gltf_animation_length(gltf_id: f64, animation_id: f64) f64 {
+export fn __gltf_animation_length(gltf_id: f64, animation_id: f64) f64 {
     const glb = get_glb(gltf_id) orelse return -1;
     const gltf = &glb.json.value;
     const animation = array_get(GLTF.Animation, gltf.animations, animation_id) orelse return -1;
@@ -461,6 +461,18 @@ export fn gltf_skin_joints(gltf_id: f64, skin_id: f64) f64 {
 export fn gltf_scene(gltf_id: f64) f64 {
     const gltf = get_gltf(gltf_id) orelse return -1;
     return @floatFromInt(gltf.scene orelse return -1);
+}
+
+export fn gltf_get_scene(gltf_id: f64, scene_name: [*:0]const u8) f64 {
+    const gltf = get_gltf(gltf_id) orelse return -1;
+    const scenes = gltf.scenes orelse return -1;
+    const needle = std.mem.span(scene_name);
+    for (scenes, 0..) |scene, i| {
+        if (scene.name) |s_name| {
+            if (std.mem.eql(s_name, needle)) return @floatFromInt(i);
+        }
+    }
+    return -1;
 }
 
 export fn gltf_scene_node_count(gltf_id: f64, scene_id: f64) f64 {
