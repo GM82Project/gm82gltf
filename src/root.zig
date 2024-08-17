@@ -114,25 +114,40 @@ fn get_buffer_view(glb: *GLB, id: usize) ?[]const u8 {
     return glb.buffers[bv.buffer][bv.byteOffset .. bv.byteOffset + bv.byteLength];
 }
 
-fn create_transform(node: *const GLTF.Node) [16]f32 {
-    var out: [4]@Vector(4, f32) = undefined;
-    const qx = node.rotation[0];
-    const qxx = qx * qx;
-    const qy = node.rotation[1];
-    const qyy = qy * qy;
-    const qz = node.rotation[2];
-    const qzz = qz * qz;
-    const qw = node.rotation[3];
+fn create_rotation(quaternion: @Vector(4, f32)) [16]f32 {
+    const const1110 = @Vector(4, f32){ 1, 1, 1, 0 };
+    const nothing = @Vector(1, f32){0};
+    const q0 = quaternion + quaternion;
+    const q1 = quaternion * q0;
 
-    const scaling_row1 = @Vector(4, f32){ 1 - 2 * qyy - 2 * qzz, 2 * qx * qy - 2 * qz * qw, 2 * qx * qz - 2 * qy * qw, 0 };
-    const scaling_row2 = @Vector(4, f32){ 2 * qx * qy, 1 - 2 * qxx - 2 * qzz, 2 * qy * qz + 2 * qx * qw, 0 };
-    const scaling_row3 = @Vector(4, f32){ 2 * qx * qz + 2 * qy * qw, 2 * qy * qz - 2 * qx * qw, 1 - 2 * qxx - 2 * qyy, 0 };
-    out[0] = scaling_row1 * @as(@Vector(4, f32), @splat(node.scale[0]));
-    out[1] = scaling_row2 * @as(@Vector(4, f32), @splat(node.scale[1]));
-    out[2] = scaling_row3 * @as(@Vector(4, f32), @splat(node.scale[2]));
-    out[3] = .{ node.translation[0], node.translation[1], node.translation[2], 1 };
+    var v0 = @shuffle(f32, q1, const1110, @Vector(4, i32){ 1, 0, 0, -4 });
+    var v1 = @shuffle(f32, q1, const1110, @Vector(4, f32){ 2, 2, 1, -4 });
+    const r0 = const1110 - v0 - v1;
 
+    v0 = @shuffle(f32, quaternion, nothing, @Vector(4, f32){ 0, 0, 1, 3 });
+    v1 = @shuffle(f32, q0, nothing, @Vector(4, f32){ 2, 1, 2, 3 });
+    v0 *= v1;
+
+    v1 = @splat(quaternion[3]);
+    const v2 = @shuffle(f32, q0, nothing, @Vector(4, f32){ 1, 2, 0, 3 });
+    v1 *= v2;
+
+    const r1 = v0 + v1;
+    const r2 = v0 - v1;
+
+    v0 = @shuffle(f32, r1, r2, @Vector(4, f32){ 1, -1, -2, 2 });
+    v1 = @shuffle(f32, r1, r2, @Vector(4, f32){ 0, -3, 0, -3 });
+
+    const out = [4]@Vector(4, f32){ @shuffle(f32, r0, v0, @Vector(4, f32){ 0, -1, -2, 3 }), @shuffle(f32, r0, v0, @Vector(4, f32){ -3, 1, -4, 3 }), @shuffle(f32, r0, v1, @Vector(4, f32){ -1, -2, 2, 3 }), @Vector(4, f32){ 0, 0, 0, 1 } };
     return @bitCast(out);
+}
+
+fn create_transform(node: *const GLTF.Node) [16]f32 {
+    const rotation = create_rotation(node.rotation);
+    const scaling = [16]f32{ node.scale[0], 0, 0, 0, 0, node.scale[1], 0, 0, 0, 0, node.scale[2], 0, 0, 0, 0, 1 };
+    const translation = [16]f32{ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, node.translation[0], node.translation[1], node.translation[2], 1 };
+
+    return multiply_matrices(multiply_matrices(scaling, rotation), translation);
 }
 
 fn multiply_matrices(m_a: [16]f32, m_b: [16]f32) [16]f32 {
@@ -406,12 +421,12 @@ export fn gltf_skin_joints(gltf_id: f64, skin_id: f64) f64 {
         var matrix = create_transform(node);
         while (node.parent) |parent| {
             node = array_get(GLTF.Node, gltf.nodes, node.parent) orelse return -1;
-            matrix = multiply_matrices(create_transform(node), matrix);
+            matrix = multiply_matrices(matrix, create_transform(node));
             if (parent == skin.skeleton) break;
         }
         if (ibm_data) |data| {
-            const matrix_ptr = data[i * ibm_stride .. i * ibm_stride + 16];
-            matrix = multiply_matrices(matrix, matrix_ptr[0..16].*);
+            const matrix_ptr = data[i * ibm_stride ..];
+            matrix = multiply_matrices(matrix_ptr[0..16].*, matrix);
         }
         g_matrices.addOneAssumeCapacity().* = matrix;
     }
@@ -834,6 +849,41 @@ test "matrices" {
         0, 0, 6, 0,
         1, 2, 3, 1,
     }, &create_transform(&node));
+    try testing.expectEqualSlices(f32, &.{
+        1, 0,  0,  0,
+        0, -1, 0,  0,
+        0, 0,  -1, 0,
+        0, 0,  0,  1,
+    }, &create_rotation(.{ 1, 0, 0, 0 }));
+    try testing.expectEqualSlices(f32, &.{
+        -1, 0, 0,  0,
+        0,  1, 0,  0,
+        0,  0, -1, 0,
+        0,  0, 0,  1,
+    }, &create_rotation(.{ 0, 1, 0, 0 }));
+    try testing.expectEqualSlices(f32, &.{
+        -1, 0,  0, 0,
+        0,  -1, 0, 0,
+        0,  0,  1, 0,
+        0,  0,  0, 1,
+    }, &create_rotation(.{ 0, 0, 1, 0 }));
+    try testing.expectEqualSlices(f32, &.{
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1,
+    }, &create_rotation(.{ 0, 0, 0, 1 }));
+    const node_rotated = GLTF.Node{
+        .scale = .{ 1, 2, 3 },
+        .rotation = .{ 1, 0, 0, 0 },
+        .translation = .{ 4, 5, 6 },
+    };
+    try testing.expectEqualSlices(f32, &.{
+        1, 0,  0,  0,
+        0, -2, 0,  0,
+        0, 0,  -3, 0,
+        4, 5,  6,  1,
+    }, &create_transform(&node_rotated));
     try testing.expectEqualSlices(f32, &.{
         60,  69,  48,  43,
         144, 165, 120, 119,
