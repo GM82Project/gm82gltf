@@ -365,7 +365,7 @@ export fn gltf_animate(gltf_id: f64, animation_id: f64, time: f64) f64 {
             }
         }
         // we've gone through them all, so we're at the end
-        const output_offset = output_byte_offset + (output_bv.byteStride orelse 4 * output.len) * input_accessor.count - 1;
+        const output_offset = output_byte_offset + ((output_bv.byteStride orelse 4) * output.len) * (input_accessor.count - 1);
         @memcpy(output, @as([*]const f32, @ptrCast(output_buffer.ptr))[output_offset / 4 .. output_offset / 4 + output.len]);
     }
     return @floatFromInt(@intFromBool(done));
