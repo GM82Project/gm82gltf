@@ -53,6 +53,18 @@
 					"returntype": 2
 				},
 				{
+					"name": "gltf_get_animation",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_get_animation(gltf,animname)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						1
+					],
+					"returntype": 2
+				},
+				{
 					"name": "gltf_animate",
 					"extname": "",
 					"calltype": 12,

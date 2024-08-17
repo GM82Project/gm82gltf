@@ -295,6 +295,18 @@ export fn gltf_destroy(id: f64) f64 {
     return 0;
 }
 
+export fn gltf_get_animation(gltf_id: f64, animation_name: [*:0]const u8) f64 {
+    const gltf = get_gltf(gltf_id) orelse return -1;
+    const animations = gltf.animations orelse return -1;
+    const needle = std.mem.span(animation_name);
+    for (animations, 0..) |animation, i| {
+        if (animation.name) |a_name| {
+            if (std.mem.eql(u8, a_name, needle)) return @floatFromInt(i);
+        }
+    }
+    return -1;
+}
+
 export fn gltf_animate(gltf_id: f64, animation_id: f64, time: f64) f64 {
     const glb = get_glb(gltf_id) orelse return -1;
     const gltf = &glb.json.value;
@@ -467,9 +479,10 @@ export fn gltf_scene_node(gltf_id: f64, scene_id: f64, node_id: f64) f64 {
 export fn gltf_get_node(gltf_id: f64, name: [*:0]const u8) f64 {
     const gltf = get_gltf(gltf_id) orelse return -1;
     const nodes = gltf.nodes orelse return -1;
+    const needle = std.mem.span(name);
     for (nodes, 0..) |n, i| {
         if (n.name) |n_name| {
-            if (std.mem.eql(u8, n_name, std.mem.span(name))) {
+            if (std.mem.eql(u8, n_name, needle)) {
                 return @floatFromInt(i);
             }
         }
