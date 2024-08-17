@@ -53,6 +53,17 @@
 					"returntype": 2
 				},
 				{
+					"name": "gltf_animation_count",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_animation_count(gltf)",
+					"hidden": false,
+					"argtypes": [
+						2
+					],
+					"returntype": 2
+				},
+				{
 					"name": "gltf_get_animation",
 					"extname": "",
 					"calltype": 12,
@@ -63,6 +74,18 @@
 						1
 					],
 					"returntype": 2
+				},
+				{
+					"name": "gltf_animation_name",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_animation_name(gltf,animation)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 1
 				},
 				{
 					"name": "__gltf_animate",
@@ -137,6 +160,17 @@
 					"returntype": 2
 				},
 				{
+					"name": "gltf_scene_count",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_scene_count(gltf)",
+					"hidden": false,
+					"argtypes": [
+						2
+					],
+					"returntype": 2
+				},
+				{
 					"name": "gltf_get_scene",
 					"extname": "",
 					"calltype": 12,
@@ -147,6 +181,18 @@
 						1
 					],
 					"returntype": 2
+				},
+				{
+					"name": "gltf_scene_name",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_scene_name(gltf,scene)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 1
 				},
 				{
 					"name": "gltf_scene_node_count",
@@ -184,6 +230,18 @@
 						1
 					],
 					"returntype": 2
+				},
+				{
+					"name": "gltf_node_name",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_node_name(gltf,node)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 1
 				},
 				{
 					"name": "gltf_node_tx",
@@ -769,7 +827,7 @@
 						2,
 						2
 					],
-					"returntype": 2
+					"returntype": 1
 				},
 				{
 					"name": "gltf_material_alpha_cutoff",

@@ -295,6 +295,12 @@ export fn gltf_destroy(id: f64) f64 {
     return 0;
 }
 
+export fn gltf_animation_count(gltf_id: f64) f64 {
+    const gltf = get_gltf(gltf_id) orelse return -1;
+    const animations = gltf.animations orelse return 0;
+    return @floatFromInt(animations.len);
+}
+
 export fn gltf_get_animation(gltf_id: f64, animation_name: [*:0]const u8) f64 {
     const gltf = get_gltf(gltf_id) orelse return -1;
     const animations = gltf.animations orelse return -1;
@@ -305,6 +311,12 @@ export fn gltf_get_animation(gltf_id: f64, animation_name: [*:0]const u8) f64 {
         }
     }
     return -1;
+}
+
+export fn gltf_animation_name(gltf_id: f64, animation_id: f64) [*:0]const u8 {
+    const gltf = get_gltf(gltf_id) orelse return "";
+    const animation = array_get(GLTF.Animation, gltf.animations, animation_id) orelse return "";
+    return return_string(animation.name orelse return "");
 }
 
 export fn __gltf_animate(gltf_id: f64, animation_id: f64, time: f64) f64 {
@@ -463,6 +475,12 @@ export fn gltf_scene(gltf_id: f64) f64 {
     return @floatFromInt(gltf.scene orelse return -1);
 }
 
+export fn gltf_scene_count(gltf_id: f64) f64 {
+    const gltf = get_gltf(gltf_id) orelse return -1;
+    const scenes = gltf.scenes orelse return 0;
+    return @floatFromInt(scenes.len);
+}
+
 export fn gltf_get_scene(gltf_id: f64, scene_name: [*:0]const u8) f64 {
     const gltf = get_gltf(gltf_id) orelse return -1;
     const scenes = gltf.scenes orelse return -1;
@@ -473,6 +491,12 @@ export fn gltf_get_scene(gltf_id: f64, scene_name: [*:0]const u8) f64 {
         }
     }
     return -1;
+}
+
+export fn gltf_scene_name(gltf_id: f64, scene_id: f64) [*:0]const u8 {
+    const gltf = get_gltf(gltf_id) orelse return "";
+    const scene = array_get(GLTF.Scene, gltf.scenes, scene_id) orelse return "";
+    return return_string(scene.name orelse return "");
 }
 
 export fn gltf_scene_node_count(gltf_id: f64, scene_id: f64) f64 {
@@ -500,6 +524,11 @@ export fn gltf_get_node(gltf_id: f64, name: [*:0]const u8) f64 {
         }
     }
     return -1;
+}
+
+export fn gltf_node_name(gltf_id: f64, node_id: f64) [*:0]const u8 {
+    const node = get_node(gltf_id, node_id) orelse return "";
+    return return_string(node.name orelse return "");
 }
 
 export fn gltf_node_tx(gltf_id: f64, node_id: f64) f64 {
