@@ -205,7 +205,7 @@
     d3d_transform_add_translation(gltf_node_tx(argument0,argument1),gltf_node_ty(argument0,argument1),gltf_node_tz(argument0,argument1))
     d3d_transform_add_stack_top()
 
-    // not sure what the correct logic here is but this seems to work
+    // "Only the joint transforms are applied to the skinned mesh; the transform of the skinned mesh node MUST be ignored."
     // see after for loop
     if (__skin>=0) {
         d3d_transform_stack_push()
