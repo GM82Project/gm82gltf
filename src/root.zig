@@ -420,9 +420,9 @@ export fn gltf_skin_joints(gltf_id: f64, skin_id: f64) f64 {
         var node = array_get(GLTF.Node, gltf.nodes, joint) orelse return -1;
         var matrix = create_transform(node);
         while (node.parent) |parent| {
+            if (parent == skin.skeleton) break;
             node = array_get(GLTF.Node, gltf.nodes, node.parent) orelse return -1;
             matrix = multiply_matrices(matrix, create_transform(node));
-            if (parent == skin.skeleton) break;
         }
         if (ibm_data) |data| {
             const matrix_ptr = data[i * ibm_stride ..];
