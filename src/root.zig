@@ -351,12 +351,19 @@ export fn gltf_animate(gltf_id: f64, animation_id: f64, time: f64) f64 {
                         const current_next: @Vector(4, f32) = output_next[0..4].*;
                         const dot = @reduce(.Add, current * current_next);
                         const a = std.math.acos(@abs(dot));
-                        const s: @Vector(4, f32) = @splat(dot / @abs(dot));
-                        const sina: @Vector(4, f32) = @splat(@sin(a));
-                        const sinat: @Vector(4, f32) = @splat(@floatCast(@sin(a * lerp)));
-                        const sina1t: @Vector(4, f32) = @splat(@floatCast(@sin(a * (1 - lerp))));
-                        const slerped = @mulAdd(@TypeOf(current), sina1t / sina, current, s * (sinat / sina) * current_next);
-                        @memcpy(output[0..4], @as([4]f32, slerped)[0..]);
+                        // "When a is close to zero, spherical linear interpolation turns into regular linear interpolation."
+                        if (@abs(a) > 0.001) {
+                            const s: @Vector(4, f32) = @splat(dot / @abs(dot));
+                            const sina: @Vector(4, f32) = @splat(@sin(a));
+                            const sinat: @Vector(4, f32) = @splat(@floatCast(@sin(a * lerp)));
+                            const sina1t: @Vector(4, f32) = @splat(@floatCast(@sin(a * (1 - lerp))));
+                            const slerped = @mulAdd(@TypeOf(current), sina1t / sina, current, s * (sinat / sina) * current_next);
+                            @memcpy(output[0..4], @as([4]f32, slerped)[0..]);
+                        } else {
+                            const lerpsplat: @Vector(4, f32) = @splat(@floatCast(lerp));
+                            const lerped: @Vector(4, f32) = std.math.lerp(current, current_next, lerpsplat);
+                            @memcpy(output[0..4], @as([4]f32, lerped)[0..]);
+                        }
                     }
                 } else {
                     @memcpy(output, output_current);
