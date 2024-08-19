@@ -613,6 +613,28 @@ export fn gltf_node_skin(gltf_id: f64, node_id: f64) f64 {
     return @floatFromInt(node.skin orelse return -1);
 }
 
+export fn gltf_node_weight_count(gltf_id: f64, node_id: f64) f64 {
+    const gltf = get_gltf(gltf_id) orelse return -1;
+    const node = array_get(GLTF.Node, gltf.nodes, node_id) orelse return -1;
+    const weights = blk: {
+        if (node.weights) |weights| break :blk weights;
+        const mesh = array_get(GLTF.Mesh, gltf.meshes, node.mesh) orelse return -1;
+        break :blk mesh.weights orelse return 0;
+    };
+    return @floatFromInt(weights.len);
+}
+
+export fn gltf_node_weight(gltf_id: f64, node_id: f64, weight_id: f64) f64 {
+    const gltf = get_gltf(gltf_id) orelse return -1;
+    const node = array_get(GLTF.Node, gltf.nodes, node_id) orelse return -1;
+    const weights = blk: {
+        if (node.weights) |weights| break :blk weights;
+        const mesh = array_get(GLTF.Mesh, gltf.meshes, node.mesh) orelse return -1;
+        break :blk mesh.weights orelse return 0;
+    };
+    return array_get(f32, weights, weight_id) orelse return 0;
+}
+
 export fn gltf_camera_type(gltf_id: f64, camera_id: f64) [*:0]const u8 {
     const camera = get_camera(gltf_id, camera_id) orelse return "";
     return return_string(camera.type);
@@ -685,6 +707,34 @@ export fn gltf_mesh_primitive_attribute_accessor(gltf_id: f64, mesh_id: f64, pri
     const attribute_id_i: usize = @intFromFloat(attribute_id);
     if (attribute_id_i >= primitive.attributes.map.count()) return -1;
     return @floatFromInt(primitive.attributes.map.entries.get(attribute_id_i).value);
+}
+
+export fn gltf_mesh_primitive_morph_count(gltf_id: f64, mesh_id: f64, primitive_id: f64) f64 {
+    const primitive = get_mesh_primitive(gltf_id, mesh_id, primitive_id) orelse return -1;
+    const targets = primitive.targets orelse return 0;
+    return @floatFromInt(targets.len);
+}
+
+export fn gltf_mesh_primitive_morph_attribute_count(gltf_id: f64, mesh_id: f64, primitive_id: f64, morph_id: f64) f64 {
+    const primitive = get_mesh_primitive(gltf_id, mesh_id, primitive_id) orelse return -1;
+    const target = array_get(std.json.ArrayHashMap(usize), primitive.targets, morph_id) orelse return -1;
+    return @floatFromInt(target.map.count());
+}
+
+export fn gltf_mesh_primitive_morph_attribute_semantic(gltf_id: f64, mesh_id: f64, primitive_id: f64, morph_id: f64, attribute_id: f64) [*:0]const u8 {
+    const primitive = get_mesh_primitive(gltf_id, mesh_id, primitive_id) orelse return "";
+    const target = array_get(std.json.ArrayHashMap(usize), primitive.targets, morph_id) orelse return "";
+    const attribute_id_i: usize = @intFromFloat(attribute_id);
+    if (attribute_id_i >= primitive.attributes.map.count()) return "";
+    return return_string(target.map.entries.get(attribute_id_i).key);
+}
+
+export fn gltf_mesh_primitive_morph_attribute_accessor(gltf_id: f64, mesh_id: f64, primitive_id: f64, morph_id: f64, attribute_id: f64) f64 {
+    const primitive = get_mesh_primitive(gltf_id, mesh_id, primitive_id) orelse return -1;
+    const target = array_get(std.json.ArrayHashMap(usize), primitive.targets, morph_id) orelse return -1;
+    const attribute_id_i: usize = @intFromFloat(attribute_id);
+    if (attribute_id_i >= primitive.attributes.map.count()) return -1;
+    return @floatFromInt(target.map.entries.get(attribute_id_i).value);
 }
 
 export fn gltf_accessor_type(gltf_id: f64, accessor_id: f64) [*:0]const u8 {

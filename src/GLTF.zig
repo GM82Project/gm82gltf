@@ -128,8 +128,10 @@ pub const Mesh = struct {
         indices: ?usize = null,
         material: ?usize = null,
         mode: usize = 4,
+        targets: ?[]std.json.ArrayHashMap(usize),
     };
     primitives: []const Primitive,
+    weights: ?[]const f32 = null,
     name: ?[]const u8 = null,
 };
 
@@ -143,6 +145,7 @@ pub const Node = struct {
     scale: [3]f32 = .{ 1, 1, 1 },
     translation: [3]f32 = .{ 0, 0, 0 },
     name: ?[]const u8 = null,
+    weights: ?[]const f32 = null,
     // not in the spec but it's convenient
     parent: ?usize = null,
 };
