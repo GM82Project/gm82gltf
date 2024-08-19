@@ -437,6 +437,30 @@
 					"returntype": 2
 				},
 				{
+					"name": "gltf_node_weight_count",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_node_weight_count(gltf,node)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_weights_pointer",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_node_weights_pointer(gltf,node)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
 					"name": "gltf_camera_type",
 					"extname": "",
 					"calltype": 12,

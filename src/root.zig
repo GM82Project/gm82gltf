@@ -624,7 +624,7 @@ export fn gltf_node_weight_count(gltf_id: f64, node_id: f64) f64 {
     return @floatFromInt(weights.len);
 }
 
-export fn gltf_node_weight(gltf_id: f64, node_id: f64, weight_id: f64) f64 {
+export fn gltf_node_weights_pointer(gltf_id: f64, node_id: f64) f64 {
     const gltf = get_gltf(gltf_id) orelse return -1;
     const node = array_get(GLTF.Node, gltf.nodes, node_id) orelse return -1;
     const weights = blk: {
@@ -632,7 +632,7 @@ export fn gltf_node_weight(gltf_id: f64, node_id: f64, weight_id: f64) f64 {
         const mesh = array_get(GLTF.Mesh, gltf.meshes, node.mesh) orelse return -1;
         break :blk mesh.weights orelse return 0;
     };
-    return array_get(f32, weights, weight_id) orelse return 0;
+    return @floatFromInt(@intFromPtr(weights.ptr));
 }
 
 export fn gltf_camera_type(gltf_id: f64, camera_id: f64) [*:0]const u8 {
