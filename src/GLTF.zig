@@ -18,12 +18,27 @@ skins: ?[]Skin = null,
 textures: ?[]Texture = null,
 
 pub const Accessor = struct {
+    const Sparse = struct {
+        const Indices = struct {
+            bufferView: usize,
+            byteOffset: usize = 0,
+            componentType: usize,
+        };
+        const Values = struct {
+            bufferView: usize,
+            byteOffset: usize = 0,
+        };
+        count: usize,
+        indices: Indices,
+        values: Values,
+    };
     bufferView: ?usize = null,
     byteOffset: usize = 0,
     componentType: usize,
     normalized: bool = false,
     count: usize,
     type: []const u8,
+    sparse: ?Sparse,
     name: ?[]const u8 = null,
 };
 
