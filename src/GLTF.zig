@@ -38,7 +38,7 @@ pub const Accessor = struct {
     normalized: bool = false,
     count: usize,
     type: []const u8,
-    sparse: ?Sparse,
+    sparse: ?Sparse = null,
     name: ?[]const u8 = null,
 };
 
@@ -143,7 +143,7 @@ pub const Mesh = struct {
         indices: ?usize = null,
         material: ?usize = null,
         mode: usize = 4,
-        targets: ?[]std.json.ArrayHashMap(usize),
+        targets: ?[]std.json.ArrayHashMap(usize) = null,
     };
     primitives: []const Primitive,
     weights: ?[]const f32 = null,
