@@ -198,7 +198,8 @@
 
 #define gltf_draw_node
     ///gltf_draw_node(gltf,node)
-    var __i,__j,__k,__node,__mesh_id,__cullmode,__unique_mesh_id,__skin,__joints,__jointsize,__address,__unique_primitive_id,__material,__base_texture_id,__base_texture;
+    var __i,__j,__k,__node,__mesh_id,__cullmode,__unique_mesh_id,__skin,__joints,__jointsize,__address,__unique_primitive_id,__material;
+    var __texture_id,__texture_base,__texture_norm,__texture_emi,__texture_occ,__texture_rough;
 
     if (is_string(argument1)) __node=gltf_get_node(argument0,argument1)
     else __node=argument1
@@ -242,14 +243,16 @@
             else d3d_set_cull_mode(__cullmode)
 
             switch (gltf_material_alpha_mode(argument0,__material)) {
-            case "BLEND": draw_set_blend_mode(bm_normal) break
-            case "OPAQUE": d3d_set_alphablend(false) break
-            case "MASK": d3d_set_alphatest(true,cm_greaterequal,gltf_material_alpha_cutoff(argument0,__material))
+                case "BLEND": draw_set_blend_mode(bm_normal) break
+                case "OPAQUE": d3d_set_alphablend(false) break
+                case "MASK": d3d_set_alphatest(true,cm_greaterequal,gltf_material_alpha_cutoff(argument0,__material)) break
             }
 
-            __base_texture_id=gltf_material_base_texture(argument0,__material)
-            if (__base_texture_id>=0) __base_texture=__gm82gltf_textures[argument0,__base_texture_id]
-            else __base_texture=__gm82gltf_texpixel
+            __texture_id=gltf_material_base_texture     (argument0,__material) if (__texture_id>=0) __texture_base =__gm82gltf_textures[argument0,__texture_id] else __texture_base =__gm82gltf_texpixel
+            __texture_id=gltf_material_normal_texture   (argument0,__material) if (__texture_id>=0) __texture_norm =__gm82gltf_textures[argument0,__texture_id] else __texture_norm = noone
+            __texture_id=gltf_material_emissive_texture (argument0,__material) if (__texture_id>=0) __texture_emi  =__gm82gltf_textures[argument0,__texture_id] else __texture_emi  = noone
+            __texture_id=gltf_material_occlusion_texture(argument0,__material) if (__texture_id>=0) __texture_occ  =__gm82gltf_textures[argument0,__texture_id] else __texture_occ  = noone
+            __texture_id=gltf_material_roughness_texture(argument0,__material) if (__texture_id>=0) __texture_rough=__gm82gltf_textures[argument0,__texture_id] else __texture_rough= noone
 
             shader_vertex_set(__gm82gltf_shader_vertex)
 
@@ -275,20 +278,45 @@
                 vertex_buffer_bind(__gm82gltf_primitivebuffers[__unique_primitive_id,__j],__j)
                 __j-=1
             }
+            
+            // bind materials
+            /*if (__texture_occ!=noone) {
+                texture_set_stage("rNormTexture",__texture_norm)
+                texture_set_stage_interpolation("rNormTexture",texture_get_interpolation())
+                shader_pixel_uniform_f("bNormalMap_enabled",1)
+            } else shader_pixel_uniform_f("bNormalMap_enabled",0)*/
+            if (__texture_occ!=noone) {
+                texture_set_stage("rOccTexture",__texture_occ)
+                texture_set_stage_interpolation("rOccTexture",texture_get_interpolation())
+                shader_pixel_uniform_f("bOcclusionMap_enabled",1)
+            } else shader_pixel_uniform_f("bOcclusionMap_enabled",0)
+            if (__texture_emi!=noone) {
+                texture_set_stage("rEmissiveTexture",__texture_emi)
+                texture_set_stage_interpolation("rEmissiveTexture",texture_get_interpolation())
+                shader_pixel_uniform_f("bEmissiveMap_enabled",1)
+            } else shader_pixel_uniform_f("bEmissiveMap_enabled",0)
+            /*if (__texture_rough!=noone) {
+                texture_set_stage("rRoughTexture",__texture_rough)
+                texture_set_stage_interpolation("rRoughTexture",texture_get_interpolation())
+                shader_pixel_uniform_f("bRoughnessMap_enabled",1)
+            } else shader_pixel_uniform_f("bRoughnessMap_enabled",0)*/
+            
+            // TODO: bind lighting
+            
             // do final draw
             if (__gm82gltf_meshindices[__unique_mesh_id,__i]>=0)
                 vertex_buffer_draw(
                     __gm82gltf_primitivebuffers[__unique_primitive_id,0],
                     __gm82gltf_meshformats[__unique_mesh_id,__i],
                     __gm82gltf_meshmodes[__unique_mesh_id,__i],
-                    __base_texture,
+                    __texture_base,
                     __gm82gltf_meshindices[__unique_mesh_id,__i])
             else
                 vertex_buffer_draw(
                     __gm82gltf_primitivebuffers[__unique_primitive_id,0],
                     __gm82gltf_meshformats[__unique_mesh_id,__i],
                     __gm82gltf_meshmodes[__unique_mesh_id,__i],
-                    __base_texture)
+                    __texture_base)
             __i+=1
             
             shader_pixel_reset()

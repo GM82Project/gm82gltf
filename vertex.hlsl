@@ -6,16 +6,22 @@ struct VS_INPUT {
     float3 normal: NORMAL;
     float3 tangent: TANGENT0;
     float4 position: POSITION0;
-    float2 texcoord: TEXCOORD0;
+    float2 texcoord_base: TEXCOORD0;
+    float2 texcoord_occ: TEXCOORD1;
+    float2 texcoord_norm: TEXCOORD2;
+    float2 texcoord_rough: TEXCOORD3;
+    float2 texcoord_emi: TEXCOORD4;
     int4 joints: BLENDINDICES0;
     float4 weights: BLENDWEIGHT0;
 };
 
 struct VS_OUTPUT {
     float4 position: POSITION0;
-    float2 texcoord: TEXCOORD0;
-    //float4 light_col_front: COLOR0;
-    //float4 light_col_back: COLOR1;
+    float2 texcoord_base: TEXCOORD0;
+    float2 texcoord_occ: TEXCOORD1;
+    float2 texcoord_norm: TEXCOORD2;
+    float2 texcoord_rough: TEXCOORD3;
+    float2 texcoord_emi: TEXCOORD4;
 };
 
 VS_OUTPUT main(VS_INPUT input) {
@@ -32,7 +38,11 @@ VS_OUTPUT main(VS_INPUT input) {
     }
 
     output.position = mul(rMatrixWVP, input.position);
-    output.texcoord = input.texcoord;
+    output.texcoord_base = input.texcoord_base;
+    output.texcoord_occ = input.texcoord_occ;
+    output.texcoord_norm = input.texcoord_norm;
+    output.texcoord_rough = input.texcoord_rough;
+    output.texcoord_emi = input.texcoord_emi;
 
     return output;
 }
