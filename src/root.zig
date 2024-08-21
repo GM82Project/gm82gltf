@@ -808,6 +808,12 @@ export fn gltf_material_roughness_texture(gltf_id: f64, material_id: f64) f64 {
     return @floatFromInt(roughTexture.index);
 }
 
+export fn gltf_material_roughness_texcoord(gltf_id: f64, material_id: f64) f64 {
+    const material = get_material(gltf_id, material_id) orelse return -1;
+    const roughTexture = material.pbrMetallicRoughness.metallicRoughnessTexture orelse return -1;
+    return @floatFromInt(roughTexture.texCoord);
+}
+
 export fn gltf_material_base_color_pointer(gltf_id: f64, material_id: f64) f64 {
     const material = get_material(gltf_id, material_id) orelse return -1;
     return @floatFromInt(@intFromPtr(&material.pbrMetallicRoughness.baseColorFactor));
