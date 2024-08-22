@@ -99,8 +99,8 @@
     // __i: scene
     __i=0 repeat (gltf_scene_count(__gltf)) {
         // __j: node
-        __j=0 repeat (gltf_scene_node_count(__gltf,__j)) {
-            __gltf_identify_meshless(gltf_scene_node(__gltf,__i,__j))
+        __j=0 repeat (gltf_scene_node_count(__gltf,__i)) {
+            __gltf_identify_meshless(__gltf,gltf_scene_node(__gltf,__i,__j))
             __j+=1
         }
         __i+=1
