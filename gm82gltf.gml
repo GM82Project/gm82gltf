@@ -11,6 +11,7 @@
     globalvar __gm82gltf_meshmodes;
     globalvar __gm82gltf_primitives;
     globalvar __gm82gltf_primitiveid; __gm82gltf_primitiveid=0
+    globalvar __gm82gltf_primitive_hascolor;
     // stuff on attributes in primitives
     globalvar __gm82gltf_primitivebuffers;
 
@@ -22,11 +23,12 @@
 
     globalvar __gm82gltf_shader_vertex; __gm82gltf_shader_vertex=__gm82gltf_shader_vertex_default
     globalvar __gm82gltf_shader_pixel; __gm82gltf_shader_pixel=__gm82gltf_shader_pixel_default
-
+    
+    globalvar __gm82gltf_lightbuffer; __gm82gltf_lightbuffer=buffer_create()
 
 #define gltf_load
     ///gltf_load(fn)
-    var __i,__j,__k,__gltf,__texfile,__accessor,__stride;
+    var __i,__j,__k,__gltf,__texfile,__accessor,__stride,__usage;
     __gltf=__gltf_load(argument0)
     if (__gltf<0) return __gltf
     // load textures
@@ -54,16 +56,19 @@
                 __gm82gltf_meshindices[__gm82gltf_meshid,__j]=__gltf_create_index_buffer(__gltf,__accessor)
             } else __gm82gltf_meshindices[__gm82gltf_meshid,__j]=-1
             // create vertex format
+            __gm82gltf_primitive_hascolor[__gm82gltf_primitiveid]=false
             vertex_format_begin()
             // __k: attribute
             __k=0 repeat (gltf_mesh_primitive_attribute_count(__gltf,__i,__j)) {
                 __accessor=gltf_mesh_primitive_attribute_accessor(__gltf,__i,__j,__k)
-                __gltf_format_add(
+                __usage=__gltf_format_add(
                     gltf_accessor_type(__gltf,__accessor),
                     gltf_accessor_component_type(__gltf,__accessor),
                     gltf_accessor_normalized(__gltf,__accessor),
                     gltf_mesh_primitive_attribute_semantic(__gltf,__i,__j,__k),
-                    __k)
+                    __k
+                )
+                if (__usage==vf_usage_color) __gm82gltf_primitive_hascolor[__gm82gltf_primitiveid]=true
                 __k+=1
             }
             __gm82gltf_meshformats[__gm82gltf_meshid,__j]=vertex_format_end()
@@ -91,7 +96,7 @@
 
 
 #define __gltf_format_add
-    ///__gltf_format_add(type,comptype,normalized,semantic,slot)
+    ///__gltf_format_add(type,comptype,normalized,semantic,slot):usage
     var __type;
     switch (argument0) {
     case "SCALAR": if (argument1==5126) __type=vf_type_float1 break
@@ -118,16 +123,18 @@
     if (__underscore) argument3=string_copy(argument3,1,__underscore-1)
     var __usage;
     switch (string_copy(argument3,1,2)) {
-    case "PO": __usage=vf_usage_position break
-    case "NO": __usage=vf_usage_normal break
-    case "TA": __usage=vf_usage_tangent break
-    case "TE": __usage=vf_usage_texcoord break
-    case "CO": __usage=vf_usage_color break
-    case "JO": __usage=vf_usage_blendindices break
-    case "WE": __usage=vf_usage_blendweight break
+        case "PO": __usage=vf_usage_position break
+        case "NO": __usage=vf_usage_normal break
+        case "TA": __usage=vf_usage_tangent break
+        case "TE": __usage=vf_usage_texcoord break
+        case "CO": __usage=vf_usage_color break
+        case "JO": __usage=vf_usage_blendindices break
+        case "WE": __usage=vf_usage_blendweight break
     }
-
+    
     vertex_format_add_custom(__type,__usage,argument4)
+    
+    return __usage
 
 
 #define __gltf_create_index_buffer
@@ -198,7 +205,7 @@
 
 #define gltf_draw_node
     ///gltf_draw_node(gltf,node)
-    var __i,__j,__k,__node,__mesh_id,__cullmode,__unique_mesh_id,__skin,__joints,__jointsize,__address,__unique_primitive_id,__material;
+    var __i,__j,__k,__node,__mesh_id,__cullmode,__unique_mesh_id,__skin,__joints,__jointsize,__address,__unique_primitive_id,__material,__hascolor;
     var __texture_id,__texture_base,__texture_norm,__texture_emi,__texture_occ,__texture_rough;
 
     if (is_string(argument1)) __node=gltf_get_node(argument0,argument1)
@@ -229,6 +236,52 @@
         d3d_transform_stack_push()
         d3d_transform_set_identity()
     }
+    
+    shader_set(__gm82gltf_shader_vertex,__gm82gltf_shader_pixel)
+    
+    //bind lights
+    var __i,__lb;
+    
+    __lb=__gm82gltf_lightbuffer
+    buffer_get_lights(__lb)
+    
+    col_addr=shader_pixel_uniform_get_address("uLightColor")
+    pos_addr=shader_pixel_uniform_get_address("uLightPosRange")
+    dir_addr=shader_pixel_uniform_get_address("uLightDirection")
+    __i=0; repeat (8) {
+        type=buffer_read_u32(__lb)
+        
+        colr=buffer_read_float(__lb)
+        colg=buffer_read_float(__lb)
+        colb=buffer_read_float(__lb)
+        
+        //skip over diffuse alpha and 2 more colors
+        repeat (1+4+4) buffer_read_float(__lb)
+        
+        posx=buffer_read_float(__lb)
+        posy=buffer_read_float(__lb)
+        posz=buffer_read_float(__lb)
+        
+        dirx=buffer_read_float(__lb)
+        diry=buffer_read_float(__lb)
+        dirz=buffer_read_float(__lb)
+        
+        range=buffer_read_float(__lb)
+        
+        //skip rest of buffer
+        repeat (6) buffer_read_float(__lb)
+        
+        enabled=d3d_light_get_enabled(__i)
+        
+        shader_pixel_uniform_f(col_addr+__i,enabled*colr,enabled*colg,enabled*colb,1)
+        shader_pixel_uniform_f(pos_addr+__i,posx,posy,posz,(type==1)*range)
+        shader_pixel_uniform_f(dir_addr+__i,(type==3)*dirx,(type==3)*diry,(type==3)*dirz,0)
+    __i+=1}
+    
+    shader_pixel_uniform_f("uLightingEnabled",1)
+    shader_pixel_uniform_color("uAmbientColor",$808080)
+    //shader_pixel_uniform_f("uFogSettings",0,0,0)
+    //shader_pixel_uniform_color("uFogColor",$ff00ff)
 
     texture_set_repeat(true)
     if (__mesh_id>=0) {
@@ -237,7 +290,8 @@
             __unique_primitive_id=__gm82gltf_primitives[__unique_mesh_id,__i]
             
             // set up material
-            __material=gltf_mesh_primitive_material(argument0,__mesh_id,__i)
+            __material=gltf_mesh_primitive_material(argument0,__mesh_id,__i)            
+            __hascolor=__gm82gltf_primitive_hascolor[__unique_primitive_id]
 
             if (gltf_material_double_sided(argument0,__material)) d3d_set_culling(false)
             else d3d_set_cull_mode(__cullmode)
@@ -254,25 +308,27 @@
             __texture_id=gltf_material_occlusion_texture(argument0,__material) if (__texture_id>=0) __texture_occ  =__gm82gltf_textures[argument0,__texture_id] else __texture_occ  = noone
             __texture_id=gltf_material_roughness_texture(argument0,__material) if (__texture_id>=0) __texture_rough=__gm82gltf_textures[argument0,__texture_id] else __texture_rough= noone
 
-            shader_vertex_set(__gm82gltf_shader_vertex)
-
-            __address=shader_vertex_uniform_get_address("rMatrixWVP")
-            if (__address!=noone) shader_vertex_uniform_matrix(__address,mtx_world_view_projection)
-            __address=shader_vertex_uniform_get_address("rMatrixW")
+            __address=shader_vertex_uniform_get_address("uMatrixW")
             if (__address!=noone) shader_vertex_uniform_matrix(__address,mtx_world)
-            __address=shader_vertex_uniform_get_address("rSkinEnabled")
-            if (__address!=noone) shader_vertex_uniform_b(__address,__skin>=0)
+            __address=shader_vertex_uniform_get_address("uMatrixWV")
+            if (__address!=noone) shader_vertex_uniform_matrix(__address,mtx_world_view)
+            __address=shader_vertex_uniform_get_address("uMatrixWVP")
+            if (__address!=noone) shader_vertex_uniform_matrix(__address,mtx_world_view_projection)
+            __address=shader_vertex_uniform_get_address("uSkinEnabled")
+            if (__address!=noone) shader_vertex_uniform_f(__address,__skin>=0)
             if (__skin>=0) {
-                __address=shader_vertex_uniform_get_address("rJointMatrix")
+                __address=shader_vertex_uniform_get_address("uJointMatrix")
                 __gm82dx9_shader_vertex_uniform_f_buffer(__address,__joints,__jointsize)
             }
-            
-            shader_pixel_set(__gm82gltf_shader_pixel)
+
             if (__material>=0) {
-                __address=shader_pixel_uniform_get_address("rBaseColor")
-                if (__address!=noone) __gm82dx9_shader_pixel_uniform_f_buffer(__address,gltf_material_base_color_pointer(argument0,__material),16)
+                __address=shader_vertex_uniform_get_address("uBaseColor")
+                if (__address!=noone) __gm82dx9_shader_vertex_uniform_f_buffer(__address,gltf_material_base_color_pointer(argument0,__material),16)
             }
             
+            __address=shader_vertex_uniform_get_address("uHasVertexColor")
+            if (__address!=noone) shader_vertex_uniform_f(__address,__hascolor)
+
             // bind vertex buffers
             __j=gltf_mesh_primitive_attribute_count(argument0,__mesh_id,__i)-1 repeat (__j) {
                 vertex_buffer_bind(__gm82gltf_primitivebuffers[__unique_primitive_id,__j],__j)
@@ -286,15 +342,15 @@
                 shader_pixel_uniform_f("bNormalMap_enabled",1)
             } else shader_pixel_uniform_f("bNormalMap_enabled",0)*/
             if (__texture_occ!=noone) {
-                texture_set_stage("rOccTexture",__texture_occ)
-                texture_set_stage_interpolation("rOccTexture",texture_get_interpolation())
-                shader_pixel_uniform_f("bOcclusionMap_enabled",1)
-            } else shader_pixel_uniform_f("bOcclusionMap_enabled",0)
+                texture_set_stage("uOccTexture",__texture_occ)
+                texture_set_stage_interpolation("uOccTexture",texture_get_interpolation())
+                shader_pixel_uniform_f("uOcclusionMap_enabled",1)
+            } else shader_pixel_uniform_f("uOcclusionMap_enabled",0)
             if (__texture_emi!=noone) {
-                texture_set_stage("rEmissiveTexture",__texture_emi)
-                texture_set_stage_interpolation("rEmissiveTexture",texture_get_interpolation())
-                shader_pixel_uniform_f("bEmissiveMap_enabled",1)
-            } else shader_pixel_uniform_f("bEmissiveMap_enabled",0)
+                texture_set_stage("uEmissiveTexture",__texture_emi)
+                texture_set_stage_interpolation("uEmissiveTexture",texture_get_interpolation())
+                shader_pixel_uniform_f("uEmissiveMap_enabled",1)
+            } else shader_pixel_uniform_f("uEmissiveMap_enabled",0)
             /*if (__texture_rough!=noone) {
                 texture_set_stage("rRoughTexture",__texture_rough)
                 texture_set_stage_interpolation("rRoughTexture",texture_get_interpolation())
@@ -319,7 +375,6 @@
                     __texture_base)
             __i+=1
             
-            shader_pixel_reset()
             d3d_set_alphablend(true)
             d3d_set_alphatest(false,0,0)
         }
@@ -327,6 +382,8 @@
 
     // see before for loop
     if (__skin>=0) d3d_transform_stack_pop()
+    
+    shader_reset()
 
     __i=0 repeat (gltf_node_child_count(argument0,__node)) {
         gltf_draw_node(argument0,gltf_node_child(argument0,__node,__i))
