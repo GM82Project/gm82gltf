@@ -168,6 +168,19 @@ fn multiply_matrices(m_a: [16]f32, m_b: [16]f32) [16]f32 {
     return out;
 }
 
+fn create_full_transform(gltf: *const GLTF, node_id: usize, skeleton: ?usize) [16]f32 {
+    var node = array_get(GLTF.Node, gltf.nodes, node_id) orelse return std.mem.zeroes([16]f32);
+    // should only be here if there are no animations
+    if (node.matrix) |matrix| return matrix;
+    var matrix = create_transform(node);
+    while (node.parent) |parent| {
+        if (parent == skeleton) break;
+        node = array_get(GLTF.Node, gltf.nodes, node.parent) orelse return std.mem.zeroes([16]f32);
+        matrix = multiply_matrices(matrix, create_transform(node));
+    }
+    return matrix;
+}
+
 // EXPORTS
 
 export fn __gltf_reset() f64 {
@@ -454,13 +467,7 @@ export fn gltf_skin_joints(gltf_id: f64, skin_id: f64) f64 {
     g_matrices.clearRetainingCapacity();
     g_matrices.ensureTotalCapacity(skin.joints.len) catch return -1;
     for (skin.joints, 0..) |joint, i| {
-        var node = array_get(GLTF.Node, gltf.nodes, joint) orelse return -1;
-        var matrix = create_transform(node);
-        while (node.parent) |parent| {
-            if (parent == skin.skeleton) break;
-            node = array_get(GLTF.Node, gltf.nodes, node.parent) orelse return -1;
-            matrix = multiply_matrices(matrix, create_transform(node));
-        }
+        var matrix = create_full_transform(gltf, joint, skin.skeleton);
         if (ibm_data) |data| {
             const matrix_ptr = data[i * ibm_stride ..];
             matrix = multiply_matrices(matrix_ptr[0..16].*, matrix);
@@ -585,6 +592,16 @@ export fn gltf_node_sy(gltf_id: f64, node_id: f64) f64 {
 export fn gltf_node_sz(gltf_id: f64, node_id: f64) f64 {
     const node = get_node(gltf_id, node_id) orelse return -1;
     return node.scale[2];
+}
+
+export fn gltf_node_matrix_pointer(gltf_id: f64, node_id: f64) f64 {
+    const gltf = get_gltf(gltf_id) orelse return -1;
+    // just to make sure all is ok
+    _ = array_get(GLTF.Node, gltf.nodes, node_id) orelse return -1;
+    g_matrices.clearRetainingCapacity();
+    const mat_ptr = g_matrices.addOne() catch return -1;
+    mat_ptr.* = create_full_transform(gltf, @intFromFloat(node_id), null);
+    return @floatFromInt(@intFromPtr(mat_ptr));
 }
 
 export fn gltf_node_parent(gltf_id: f64, node_id: f64) f64 {
