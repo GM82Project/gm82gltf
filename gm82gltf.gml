@@ -195,7 +195,6 @@
     if (gltf_node_mesh(argument0,argument1)>=0) __meshless=false
     __gm82gltf_meshlessnodes[argument0,argument1]=__meshless
     return __meshless
-    
 
 
 #define gltf_animate
