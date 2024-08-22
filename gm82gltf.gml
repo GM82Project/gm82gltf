@@ -3,6 +3,7 @@
     globalvar __gm82gltf_texpixel; __gm82gltf_texpixel=background_get_texture(__gm82gltf_bgpixel)
     globalvar __gm82gltf_backgrounds;
     globalvar __gm82gltf_textures;
+    globalvar __gm82gltf_meshlessnodes;
     globalvar __gm82gltf_meshes;
     globalvar __gm82gltf_meshid; __gm82gltf_meshid=0
     // stuff on primitives in meshes
@@ -92,6 +93,18 @@
         __gm82gltf_meshid+=1
         __i+=1
     }
+    // identify childless nodes
+    __gm82gltf_meshlessnodes[__gltf,gltf_node_count(__gltf)-1]=0
+    var __stack;
+    // __i: scene
+    __i=0 repeat (gltf_scene_count(__gltf)) {
+        // __j: node
+        __j=0 repeat (gltf_scene_node_count(__gltf,__j)) {
+            __gltf_identify_meshless(gltf_scene_node(__gltf,__i,__j))
+            __j+=1
+        }
+        __i+=1
+    }
     return __gltf
 
 
@@ -172,6 +185,19 @@
     return __ib
 
 
+#define __gltf_identify_meshless
+    ///__gltf_identify_meshless(gltf,node) -> meshless
+    var __i,__meshless;
+    __meshless=true
+    __i=0 repeat (gltf_node_child_count(argument0,argument1)) {
+        if (__gltf_identify_meshless(argument0,gltf_node_child(argument0,argument1,__i))) __meshless=false
+    }
+    if (gltf_node_mesh(argument0,argument1)>=0) __meshless=false
+    __gm82gltf_meshlessnodes[argument0,argument1]=__meshless
+    return __meshless
+    
+
+
 #define gltf_animate
     ///gltf_animate(gltf,animation,time)
     if (is_string(argument1)) return __gltf_animate(argument0,gltf_get_animation(argument0,argument1),argument2)
@@ -211,8 +237,10 @@
     if (is_string(argument1)) __node=gltf_get_node(argument0,argument1)
     else __node=argument1
 
+    // if this node has no mesh and its children have no mesh, just give up
+    if (__gm82gltf_meshlessnodes[argument0,argument1]) exit;
+
     __mesh_id=gltf_node_mesh(argument0,__node)
-    if (__mesh_id<0 && gltf_node_child_count(argument0,__node)<=0) exit;
 
     // reversed from gltf spec because dx9 is left-handed
     if (d3d_transform_get_determinant()>0) __cullmode=cull_clockwise

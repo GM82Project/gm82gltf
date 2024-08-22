@@ -512,6 +512,12 @@ export fn gltf_scene_node(gltf_id: f64, scene_id: f64, node_id: f64) f64 {
     return @floatFromInt((array_get(usize, scene.nodes, node_id) orelse return -1).*);
 }
 
+export fn gltf_node_count(gltf_id: f64) f64 {
+    const gltf = get_gltf(gltf_id) orelse return -1;
+    const nodes = gltf.nodes orelse return 0;
+    return @floatFromInt(nodes.len);
+}
+
 export fn gltf_get_node(gltf_id: f64, name: [*:0]const u8) f64 {
     const gltf = get_gltf(gltf_id) orelse return -1;
     const nodes = gltf.nodes orelse return -1;

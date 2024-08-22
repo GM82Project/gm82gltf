@@ -627,6 +627,17 @@
 					"returntype": 2
 				},
 				{
+					"name": "gltf_node_count",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_node_count(gltf)",
+					"hidden": false,
+					"argtypes": [
+						2
+					],
+					"returntype": 2
+				},
+				{
 					"name": "gltf_node_mesh",
 					"extname": "",
 					"calltype": 12,
@@ -1097,6 +1108,15 @@
 				},
 				{
 					"name": "__gltf_create_index_buffer",
+					"extname": "",
+					"calltype": 2,
+					"helpline": "",
+					"hidden": true,
+					"argtypes": null,
+					"returntype": 2
+				},
+				{
+					"name": "__gltf_identify_meshless",
 					"extname": "",
 					"calltype": 2,
 					"helpline": "",
