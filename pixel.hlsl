@@ -14,7 +14,7 @@
     }
 
     float4 doDirLight(float3 normal, float3 dir, float4 color) {
-        return (saturate(dot(normal, dir)) * color);
+        return (saturate(dot(normalize(normal), normalize(dir))) * color);
     }
 
     float4 doPointLight(float3 wpos, float3 normal, float4 posrange, float4 color) {

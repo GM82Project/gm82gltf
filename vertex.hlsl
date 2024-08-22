@@ -41,7 +41,7 @@ VS_OUTPUT main(VS_INPUT input) {
             uJointMatrix[input.joints.w] * input.weights.w;
         
         input.position = mul(skin_mtx, input.position);
-        input.normal = normalize(mul(skin_mtx, input.normal));
+        input.normal = mul(skin_mtx, input.normal);
     }
 
     output.position = mul(uMatrixWVP, input.position);
@@ -52,7 +52,7 @@ VS_OUTPUT main(VS_INPUT input) {
     output.texcoord_rough = input.texcoord_rough;
     output.texcoord_emi = input.texcoord_emi;
 
-    output.normal = normalize(mul(uMatrixWV, input.normal));
+    output.normal = mul(uMatrixWV, input.normal);
     output.normal.z = -output.normal.z;
 
     output.wpos = mul((uMatrixW), input.position);
