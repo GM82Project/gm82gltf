@@ -190,7 +190,7 @@
     var __i,__meshless;
     __meshless=true
     __i=0 repeat (gltf_node_child_count(argument0,argument1)) {
-        if (__gltf_identify_meshless(argument0,gltf_node_child(argument0,argument1,__i))) __meshless=false
+        if (!__gltf_identify_meshless(argument0,gltf_node_child(argument0,argument1,__i))) __meshless=false
         __i+=1
     }
     if (gltf_node_mesh(argument0,argument1)>=0) __meshless=false
