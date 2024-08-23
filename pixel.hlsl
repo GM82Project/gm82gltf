@@ -6,7 +6,7 @@
     float  uLightingEnabled;
     float4 uAmbientColor;
 
-    float4 uFogSettings; //[0]=enabled [1]=start [2]=rcprange
+    float4 uFogSettings; //x=enabled y=start z=rcprange
     float4 uFogColor;
 
     float4 doFog(float3 wpos, float3 ipos, float4 color) {
@@ -42,14 +42,10 @@
 //end game maker lighting
 
 struct PS_INPUT {
-    float2 texcoord_base: TEXCOORD0;
-    float2 texcoord_occ: TEXCOORD1;
-    float2 texcoord_norm: TEXCOORD2;
-    float2 texcoord_rough: TEXCOORD3;
-    float2 texcoord_emi: TEXCOORD4;
-    float4 normal: TEXCOORD5;
-    float4 wpos: TEXCOORD6;
-    float4 ipos: TEXCOORD7;
+    float2 texcoord: TEXCOORD0;
+    float3 normal: TEXCOORD1;
+    float3 tangent: TEXCOORD2;
+    float3 worldpos: TEXCOORD3;
     float4 color: COLOR0;
 };
 
@@ -67,27 +63,43 @@ float uNormalMap_enabled;
 float uEmissiveMap_enabled;
 float uOcclusionMap_enabled;
 float uRoughnessMap_enabled;
+float3 uEyePos;
 
 PS_OUTPUT main(PS_INPUT input) {
     PS_OUTPUT output;
 
-    float4 albedo = tex2D(uBaseTexture, input.texcoord_base);
-    float4 emissive = tex2D(uEmissiveTexture, input.texcoord_base);
-    float4 occlusion = tex2D(uOccTexture, input.texcoord_base).r;
+    //diffuse
+    float4 albedo = tex2D(uBaseTexture, input.texcoord);
+    float4 emissive = tex2D(uEmissiveTexture, input.texcoord);
+    float4 occlusion = tex2D(uOccTexture, input.texcoord).r;
 
-    float4 color = tex2D(uRoughTexture, input.texcoord_base);
+
+    //metalrough
+    float4 color = tex2D(uRoughTexture, input.texcoord);
     float rough = color.g;
     float metal = color.b;
+    
+    
+    //normals
+    float3 inormnorm = normalize(input.normal);
+    float3 itangnorm = normalize(input.tangent);
+    float3 binormal = normalize(cross(itangnorm,inormnorm));
+    float3 finormal = inormnorm;
 
+    float3 normap = tex2D(uNormTexture, input.texcoord).rgb * 2 - 1;
+    if (uNormalMap_enabled>0.5) finormal = normalize(itangnorm * normap.r + binormal * normap.g + inormnorm * normap.b);
+    
+    
+    //finalize
     color = albedo * input.color;
-
+    
     if (uOcclusionMap_enabled<0.5) occlusion=float4(1.0,1.0,1.0,1.0);
     
-    if (uLightingEnabled>0.5) color = doLighting(color, input.wpos.xyz, input.normal.xyz, uAmbientColor * occlusion);
+    if (uLightingEnabled>0.5) color = doLighting(color, input.worldpos, finormal, uAmbientColor * occlusion);
     
     if (uEmissiveMap_enabled>0.5) color = saturate(color+emissive)* occlusion;
 
-    //if (uFogSettings.x) color = doFog(input.wpos.xyz, input.ipos.xyz, color);
+    //if (uFogSettings.x) color = doFog(input.worldpos.xyz, uEyePos, color);
 
     output.color = color;
 

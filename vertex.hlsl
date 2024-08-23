@@ -1,26 +1,19 @@
 struct VS_INPUT {
-    float4 normal: NORMAL;
     float4 position: POSITION0;
-    float2 texcoord_base: TEXCOORD0;
-    float2 texcoord_occ: TEXCOORD1;
-    float2 texcoord_norm: TEXCOORD2;
-    float2 texcoord_rough: TEXCOORD3;
-    float2 texcoord_emi: TEXCOORD4;
-    float4 color: COLOR0;
+    float2 texcoord: TEXCOORD0;
+    float4 normal: NORMAL0;
+    float4 tangent: TANGENT0;
     int4 joints: BLENDINDICES0;
     float4 weights: BLENDWEIGHT0;
+    float4 color: COLOR0;
 };
 
 struct VS_OUTPUT {
     float4 position: POSITION0;
-    float2 texcoord_base: TEXCOORD0;
-    float2 texcoord_occ: TEXCOORD1;
-    float2 texcoord_norm: TEXCOORD2;
-    float2 texcoord_rough: TEXCOORD3;
-    float2 texcoord_emi: TEXCOORD4;
-    float4 normal: TEXCOORD5;
-    float4 wpos: TEXCOORD6;
-    float4 ipos: TEXCOORD7;
+    float2 texcoord: TEXCOORD0;
+    float3 normal: TEXCOORD1;
+    float3 tangent: TEXCOORD2;
+    float3 worldpos: TEXCOORD3;
     float4 color: COLOR0;
 };
 
@@ -44,19 +37,14 @@ VS_OUTPUT main(VS_INPUT input) {
         input.normal = mul(skin_mtx, input.normal);
     }
 
-    output.position = mul(uMatrixWVP, input.position);
-
-    output.texcoord_base = input.texcoord_base;
-    output.texcoord_occ = input.texcoord_occ;
-    output.texcoord_norm = input.texcoord_norm;
-    output.texcoord_rough = input.texcoord_rough;
-    output.texcoord_emi = input.texcoord_emi;
-
-    output.normal = mul(uMatrixWV, input.normal);
-    output.normal.z = -output.normal.z;
-
-    output.wpos = mul((uMatrixW), input.position);
-    output.ipos = float4(uMatrixWV._41,uMatrixWV._42,uMatrixWV._43,1.0);
+    output.position = mul(uMatrixWVP, input.position);  
+    output.texcoord = input.texcoord;
+    output.normal = normalize(mul(uMatrixWV, input.normal).xyz);
+    output.tangent = normalize(mul(uMatrixWV, input.tangent).xyz);
+    output.worldpos = mul((uMatrixW), input.position).xyz;
+    
+    //output.normal.z = -output.normal.z;
+    //output.ipos = float4(uMatrixWV._41,uMatrixWV._42,uMatrixWV._43,1.0);
 
     if (uHasVertexColor<0.5) input.color = float4(1,1,1,1);
     
