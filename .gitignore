@@ -2,3 +2,5 @@
 zig-out/
 *.glb
 *.gex
+*.bat
+*.gm81
