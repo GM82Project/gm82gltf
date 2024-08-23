@@ -638,10 +638,10 @@
 					"returntype": 2
 				},
 				{
-					"name": "gltf_node_Matrix_pointer",
+					"name": "gltf_node_matrix_pointer",
 					"extname": "",
 					"calltype": 12,
-					"helpline": "gltf_node_Matrix_pointer(gltf,node)",
+					"helpline": "gltf_node_matrix_pointer(gltf,node)",
 					"hidden": false,
 					"argtypes": [
 						2,

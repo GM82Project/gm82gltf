@@ -242,10 +242,6 @@
 
     __mesh_id=gltf_node_mesh(argument0,__node)
 
-    // reversed from gltf spec because dx9 is left-handed
-    if (d3d_transform_get_determinant()>0) __cullmode=cull_clockwise
-    else __cullmode=cull_counterclockwise
-
     __skin=gltf_node_skin(argument0,__node)
     if (__skin>=0) {
         __joints=gltf_skin_joints(argument0,__skin)
@@ -253,16 +249,16 @@
     }
 
     d3d_transform_stack_push()
-    d3d_transform_set_scaling(gltf_node_sx(argument0,__node),gltf_node_sy(argument0,__node),gltf_node_sz(argument0,__node))
-    d3d_transform_add_rotation_axis(gltf_node_rx(argument0,__node),gltf_node_ry(argument0,__node),gltf_node_rz(argument0,__node),-2*darccos(gltf_node_rw(argument0,__node)))
-    d3d_transform_add_translation(gltf_node_tx(argument0,__node),gltf_node_ty(argument0,__node),gltf_node_tz(argument0,__node))
+    __gm82dx9_set_matrix_from_buffer(gltf_node_matrix_pointer(argument0,__node))
     d3d_transform_add_stack_top()
 
+    // reversed from gltf spec because dx9 is left-handed
+    if (d3d_transform_get_determinant()>0) __cullmode=cull_clockwise
+    else __cullmode=cull_counterclockwise
+
     // "Only the joint transforms are applied to the skinned mesh; the transform of the skinned mesh node MUST be ignored."
-    // see after for loop
     if (__skin>=0) {
-        d3d_transform_stack_push()
-        d3d_transform_set_identity()
+        d3d_transform_stack_top()
     }
     
     texture_set_repeat(true)
@@ -406,8 +402,7 @@
         }
     }
 
-    // see before for loop
-    if (__skin>=0) d3d_transform_stack_pop()
+    d3d_transform_stack_pop()
     
     shader_reset()
 
@@ -415,8 +410,6 @@
         gltf_draw_node(argument0,gltf_node_child(argument0,__node,__i))
         __i+=1
     }
-
-    d3d_transform_stack_pop()
 
 //
 //
