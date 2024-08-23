@@ -16,11 +16,12 @@ var g_gltfs = std.AutoArrayHashMap(i32, GLB).init(g_allocator.allocator());
 var g_gltf_next_id: i32 = 1;
 var g_stringret: ?[:0]u8 = null;
 var g_matrices = std.ArrayList([16]f32).init(g_allocator.allocator());
+var g_data: ?[]u8 = null;
 
 fn return_string(string: []const u8) [*:0]const u8 {
     // make new string
     const new_string = g_allocator.allocator().allocSentinel(u8, string.len, 0) catch return "";
-    std.mem.copyForwards(u8, new_string, string);
+    @memcpy(new_string, string);
     // replace with new string
     if (g_stringret) |stringret| {
         g_allocator.allocator().free(stringret);
@@ -179,6 +180,33 @@ fn create_full_transform(gltf: *const GLTF, node_id: usize, skeleton: ?usize) [1
         matrix = multiply_matrices(matrix, create_transform(node));
     }
     return matrix;
+}
+
+fn component_type_size(component_type: usize) usize {
+    return switch (component_type) {
+        5120 => 1,
+        5121 => 1,
+        5122 => 2,
+        5123 => 2,
+        5125 => 4,
+        5126 => 4,
+        else => 0,
+    };
+}
+
+fn type_count(t: []const u8) usize {
+    if (std.mem.eql(u8, t, "SCALAR")) return 1;
+    if (std.mem.eql(u8, t, "VEC2")) return 2;
+    if (std.mem.eql(u8, t, "VEC3")) return 3;
+    if (std.mem.eql(u8, t, "VEC4")) return 4;
+    if (std.mem.eql(u8, t, "MAT2")) return 4;
+    if (std.mem.eql(u8, t, "MAT3")) return 9;
+    if (std.mem.eql(u8, t, "MAT4")) return 16;
+    return 0;
+}
+
+fn accessor_stride(accessor: *const GLTF.Accessor) usize {
+    return component_type_size(accessor.componentType) * type_count(accessor.type);
 }
 
 // EXPORTS
@@ -779,8 +807,8 @@ export fn gltf_accessor_stride(gltf_id: f64, accessor_id: f64) f64 {
     const glb = get_glb(gltf_id) orelse return -1;
     const gltf = &glb.json.value;
     const accessor = array_get(GLTF.Accessor, gltf.accessors, accessor_id) orelse return -1;
-    const bv = array_get(GLTF.BufferView, gltf.bufferViews, accessor.bufferView) orelse return -1;
-    return @floatFromInt(bv.byteStride orelse return -1);
+    const bv = array_get(GLTF.BufferView, gltf.bufferViews, accessor.bufferView) orelse return @floatFromInt(accessor_stride(accessor));
+    return @floatFromInt(bv.byteStride orelse accessor_stride(accessor));
 }
 
 export fn gltf_accessor_copy(gltf_id: f64, accessor_id: f64, dest_address: f64, dest_size: f64) f64 {
@@ -792,12 +820,13 @@ export fn gltf_accessor_copy(gltf_id: f64, accessor_id: f64, dest_address: f64, 
     const accessor = array_get(GLTF.Accessor, gltf.accessors, accessor_id) orelse return -1;
     const bv = array_get(GLTF.BufferView, gltf.bufferViews, accessor.bufferView) orelse return -1;
     const buffer = array_get([]const u8, glb.buffers, bv.buffer) orelse return -1;
-    // TODO copy accessor instead of buffer view
-    const data = buffer.*[bv.byteOffset .. bv.byteOffset + bv.byteLength];
+    const offset = bv.byteOffset + accessor.byteOffset;
+    const size = (bv.byteStride orelse accessor_stride(accessor)) * accessor.count;
+    const data = buffer.*[offset .. offset + size];
     if (dest.len != data.len) {
         return -1;
     }
-    std.mem.copyForwards(u8, dest, data);
+    @memcpy(dest, data);
     return 0;
 }
 
@@ -805,18 +834,60 @@ export fn gltf_accessor_pointer(gltf_id: f64, accessor_id: f64) f64 {
     const glb = get_glb(gltf_id) orelse return -1;
     const gltf = &glb.json.value;
     const accessor = array_get(GLTF.Accessor, gltf.accessors, accessor_id) orelse return -1;
-    const bv = array_get(GLTF.BufferView, gltf.bufferViews, accessor.bufferView) orelse return -1;
-    const data = array_get([]const u8, glb.buffers, bv.buffer) orelse return -1;
-    return @floatFromInt(@intFromPtr(data.ptr) + bv.byteOffset + accessor.byteOffset);
+    if (accessor.sparse) |sparse| {
+        const bv_maybe = array_get(GLTF.BufferView, gltf.bufferViews, accessor.bufferView);
+        const packed_stride = accessor_stride(accessor);
+        var stride = packed_stride;
+        if (bv_maybe) |bv| {
+            if (bv.byteStride) |s| stride = s;
+        }
+        const size = accessor.count * stride;
+        if (g_data) |data| g_allocator.allocator().free(data);
+        const data = g_allocator.allocator().alignedAlloc(u8, 4, size) catch return -1;
+        g_data = data;
+        if (bv_maybe) |bv| {
+            const buffer = array_get([]const u8, glb.buffers, bv.buffer) orelse return -1;
+            const offset = bv.byteOffset + accessor.byteOffset;
+            @memcpy(data, @as([*]const u8, @ptrCast(buffer.ptr))[offset .. offset + size]);
+        } else {
+            @memset(data, 0);
+        }
+        const indices_bv = array_get(GLTF.BufferView, gltf.bufferViews, sparse.indices.bufferView) orelse return -1;
+        const indices_data: []align(4) const u8 = blk: {
+            const buffer = array_get([]align(4) const u8, glb.buffers, indices_bv.buffer) orelse return -1;
+            const offset = indices_bv.byteOffset + sparse.indices.byteOffset;
+            break :blk @alignCast(buffer.*[offset..]);
+        };
+        const values_bv = array_get(GLTF.BufferView, gltf.bufferViews, sparse.values.bufferView) orelse return -1;
+        const values_data = blk: {
+            const buffer = array_get([]const u8, glb.buffers, values_bv.buffer) orelse return -1;
+            const offset = values_bv.byteOffset + sparse.values.byteOffset;
+            break :blk buffer.*[offset..];
+        };
+        for (0..sparse.count) |i| {
+            const index = switch (sparse.indices.componentType) {
+                5121 => indices_data[i],
+                5123 => @as([*]const u16, @ptrCast(indices_data.ptr))[i],
+                5125 => @as([*]const u32, @ptrCast(indices_data.ptr))[i],
+                else => return -1,
+            };
+            @memcpy(data[stride * index .. stride * (index + 1)], values_data[packed_stride * i .. packed_stride * (i + 1)]);
+        }
+        return @floatFromInt(@intFromPtr(data.ptr));
+    } else {
+        const bv = array_get(GLTF.BufferView, gltf.bufferViews, accessor.bufferView) orelse return -1;
+        const data = array_get([]const u8, glb.buffers, bv.buffer) orelse return -1;
+        return @floatFromInt(@intFromPtr(data.ptr) + bv.byteOffset + accessor.byteOffset);
+    }
 }
 
 export fn gltf_accessor_size(gltf_id: f64, accessor_id: f64) f64 {
     const glb = get_glb(gltf_id) orelse return -1;
     const gltf = &glb.json.value;
     const accessor = array_get(GLTF.Accessor, gltf.accessors, accessor_id) orelse return -1;
-    const bv = array_get(GLTF.BufferView, gltf.bufferViews, accessor.bufferView) orelse return -1;
-    // TODO calculate using accessor type and such, this is incorrect
-    return @floatFromInt(bv.byteLength);
+    const bv = array_get(GLTF.BufferView, gltf.bufferViews, accessor.bufferView) orelse return @floatFromInt(accessor.count * accessor_stride(accessor));
+    const stride = bv.byteStride orelse accessor_stride(accessor);
+    return @floatFromInt(accessor.count * stride);
 }
 
 export fn gltf_material_base_texture(gltf_id: f64, material_id: f64) f64 {
@@ -958,7 +1029,7 @@ export fn gltf_texture_copy(gltf_id: f64, texture_id: f64, dest_address: f64, de
     if (dest.len != data.len) {
         return -1;
     }
-    std.mem.copyForwards(u8, dest, data);
+    @memcpy(dest, data);
     return 0;
 }
 
