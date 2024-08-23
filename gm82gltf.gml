@@ -278,38 +278,40 @@
         col_addr=shader_pixel_uniform_get_address("uLightColor")
         pos_addr=shader_pixel_uniform_get_address("uLightPosRange")
         dir_addr=shader_pixel_uniform_get_address("uLightDirection")
-        __i=0; repeat (8) {
-            type=buffer_read_u32(__lb)
-            
-            colr=buffer_read_float(__lb)
-            colg=buffer_read_float(__lb)
-            colb=buffer_read_float(__lb)
-            
-            //skip over diffuse alpha and 2 more colors
-            repeat (1+4+4) buffer_read_float(__lb)
-            
-            posx=buffer_read_float(__lb)
-            posy=buffer_read_float(__lb)
-            posz=buffer_read_float(__lb)
-            
-            dirx=buffer_read_float(__lb)
-            diry=buffer_read_float(__lb)
-            dirz=buffer_read_float(__lb)
-            
-            range=buffer_read_float(__lb)
-            
-            //skip rest of buffer
-            repeat (6) buffer_read_float(__lb)
-            
-            enabled=d3d_light_get_enabled(__i)
-            
-            shader_pixel_uniform_f(col_addr+__i,enabled*colr,enabled*colg,enabled*colb,1)
-            shader_pixel_uniform_f(pos_addr+__i,posx,posy,posz,(type==1)*range)
-            shader_pixel_uniform_f(dir_addr+__i,(type==3)*dirx,(type==3)*diry,(type==3)*dirz,0)
-        __i+=1}
         
-        shader_pixel_uniform_f("uLightingEnabled",1)
-        shader_pixel_uniform_color("uAmbientColor",$808080)
+        __i=0; repeat (8) {
+            enabled=d3d_light_get_enabled(__i)
+            if (enabled) {            
+                type=buffer_read_u32(__lb)
+                
+                colr=buffer_read_float(__lb)
+                colg=buffer_read_float(__lb)
+                colb=buffer_read_float(__lb)
+                
+                //skip over diffuse alpha and 2 more colors
+                buffer_set_pos(__lb,buffer_get_pos(__lb)+9*4)
+                
+                posx=buffer_read_float(__lb)
+                posy=buffer_read_float(__lb)
+                posz=buffer_read_float(__lb)
+                
+                dirx=buffer_read_float(__lb)
+                diry=buffer_read_float(__lb)
+                dirz=buffer_read_float(__lb)
+                
+                range=buffer_read_float(__lb)
+                
+                //skip rest of buffer
+                buffer_set_pos(__lb,buffer_get_pos(__lb)+6*4)
+                
+                shader_pixel_uniform_f(col_addr+__i,enabled*colr,enabled*colg,enabled*colb,1)
+                shader_pixel_uniform_f(pos_addr+__i,posx,posy,posz,(type==1)*range)
+                shader_pixel_uniform_f(dir_addr+__i,(type==3)*dirx,(type==3)*diry,(type==3)*dirz,0)
+            } else buffer_set_pos(__lb,buffer_get_pos(__lb)+104)
+        __i+=1}        
+        
+        __gm82dx9_shader_pixel_uniform_4f(shader_pixel_uniform_get_address("uLightingEnabled"),1,0,0,0)
+        shader_pixel_uniform_color("uAmbientColor",$404040,1)
         //shader_pixel_uniform_f("uFogSettings",0,0,0)
         //shader_pixel_uniform_color("uFogColor",$ff00ff)
     
@@ -336,26 +338,19 @@
             __texture_id=gltf_material_occlusion_texture(argument0,__material) if (__texture_id>=0) __texture_occ  =__gm82gltf_textures[argument0,__texture_id] else __texture_occ  = noone
             __texture_id=gltf_material_roughness_texture(argument0,__material) if (__texture_id>=0) __texture_rough=__gm82gltf_textures[argument0,__texture_id] else __texture_rough= noone
 
-            __address=shader_vertex_uniform_get_address("uMatrixW")
-            if (__address!=noone) shader_vertex_uniform_matrix(__address,mtx_world)
-            __address=shader_vertex_uniform_get_address("uMatrixWV")
-            if (__address!=noone) shader_vertex_uniform_matrix(__address,mtx_world_view)
-            __address=shader_vertex_uniform_get_address("uMatrixWVP")
-            if (__address!=noone) shader_vertex_uniform_matrix(__address,mtx_world_view_projection)
-            __address=shader_vertex_uniform_get_address("uSkinEnabled")
-            if (__address!=noone) shader_vertex_uniform_f(__address,__skin>=0)
+            __gm82dx9_shader_vertex_uniform_matrix(shader_vertex_uniform_get_address("uMatrixW"),mtx_world)
+            __gm82dx9_shader_vertex_uniform_matrix(shader_vertex_uniform_get_address("uMatrixWV"),mtx_world_view)
+            __gm82dx9_shader_vertex_uniform_matrix(shader_vertex_uniform_get_address("uMatrixWVP"),mtx_world_view_projection)
+            __gm82dx9_shader_vertex_uniform_4f(shader_vertex_uniform_get_address("uSkinEnabled"),__skin>=0,0,0,0)
             if (__skin>=0) {
-                __address=shader_vertex_uniform_get_address("uJointMatrix")
-                __gm82dx9_shader_vertex_uniform_f_buffer(__address,__joints,__jointsize)
+                __gm82dx9_shader_vertex_uniform_f_buffer(shader_vertex_uniform_get_address("uJointMatrix"),__joints,__jointsize)
             }
 
             if (__material>=0) {
-                __address=shader_vertex_uniform_get_address("uBaseColor")
-                if (__address!=noone) __gm82dx9_shader_vertex_uniform_f_buffer(__address,gltf_material_base_color_pointer(argument0,__material),16)
+                __gm82dx9_shader_vertex_uniform_f_buffer(shader_vertex_uniform_get_address("uBaseColor"),gltf_material_base_color_pointer(argument0,__material),16)
             }
             
-            __address=shader_vertex_uniform_get_address("uHasVertexColor")
-            if (__address!=noone) shader_vertex_uniform_f(__address,__hascolor)
+            __gm82dx9_shader_vertex_uniform_4f(shader_vertex_uniform_get_address("uHasVertexColor"),__hascolor,0,0,0)
 
             // bind vertex buffers
             __j=gltf_mesh_primitive_attribute_count(argument0,__mesh_id,__i)-1 repeat (__j) {
