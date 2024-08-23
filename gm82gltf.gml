@@ -232,7 +232,7 @@
 #define gltf_draw_node
     ///gltf_draw_node(gltf,node)
     var __i,__j,__k,__node,__mesh_id,__cullmode,__unique_mesh_id,__skin,__joints,__jointsize,__address,__unique_primitive_id,__material,__hascolor;
-    var __texture_id,__texture_base,__texture_norm,__texture_emi,__texture_occ,__texture_rough;
+    var __texture_id,__texture_base,__texture_norm,__texture_emi,__texture_occ,__texture_rough,__filter;
 
     if (is_string(argument1)) __node=gltf_get_node(argument0,argument1)
     else __node=argument1
@@ -305,9 +305,9 @@
                     //skip rest of buffer
                     buffer_set_pos(__lb,buffer_get_pos(__lb)+6*4)
                     
-                    shader_pixel_uniform_f(col_addr+__i,enabled*colr,enabled*colg,enabled*colb,1)
-                    shader_pixel_uniform_f(pos_addr+__i,posx,posy,posz,(type==1)*range)
-                    shader_pixel_uniform_f(dir_addr+__i,(type==3)*dirx,(type==3)*diry,(type==3)*dirz,0)
+                    __gm82dx9_shader_pixel_uniform_4f(col_addr+__i,enabled*colr,enabled*colg,enabled*colb,1)
+                    __gm82dx9_shader_pixel_uniform_4f(pos_addr+__i,posx,posy,posz,(type==1)*range)
+                    __gm82dx9_shader_pixel_uniform_4f(dir_addr+__i,(type==3)*dirx,(type==3)*diry,(type==3)*dirz,0)
                 } else buffer_set_pos(__lb,buffer_get_pos(__lb)+104)
             __i+=1}        
             
@@ -363,24 +363,25 @@
             //__texture_base =__gm82gltf_texpixel
             
             // bind materials
-            /*if (__texture_occ!=noone) {
+            __filter=texture_get_interpolation()
+            /*if (__texture_norm!=noone) {
                 texture_set_stage("rNormTexture",__texture_norm)
-                texture_set_stage_interpolation("rNormTexture",texture_get_interpolation())
+                texture_set_stage_interpolation("rNormTexture",__filter)
                 shader_pixel_uniform_f("bNormalMap_enabled",1)
             } else shader_pixel_uniform_f("bNormalMap_enabled",0)*/
             if (__texture_occ!=noone) {
                 texture_set_stage("uOccTexture",__texture_occ)
-                texture_set_stage_interpolation("uOccTexture",texture_get_interpolation())
+                texture_set_stage_interpolation("uOccTexture",__filter)
                 shader_pixel_uniform_f("uOcclusionMap_enabled",1)
             } else shader_pixel_uniform_f("uOcclusionMap_enabled",0)
             if (__texture_emi!=noone) {
                 texture_set_stage("uEmissiveTexture",__texture_emi)
-                texture_set_stage_interpolation("uEmissiveTexture",texture_get_interpolation())
+                texture_set_stage_interpolation("uEmissiveTexture",__filter)
                 shader_pixel_uniform_f("uEmissiveMap_enabled",1)
             } else shader_pixel_uniform_f("uEmissiveMap_enabled",0)
             /*if (__texture_rough!=noone) {
                 texture_set_stage("rRoughTexture",__texture_rough)
-                texture_set_stage_interpolation("rRoughTexture",texture_get_interpolation())
+                texture_set_stage_interpolation("rRoughTexture",__filter)
                 shader_pixel_uniform_f("bRoughnessMap_enabled",1)
             } else shader_pixel_uniform_f("bRoughnessMap_enabled",0)*/
             
