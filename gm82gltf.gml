@@ -356,14 +356,12 @@
                 __j-=1
             }
             
-            if (keyboard_check(vk_space)) __texture_base =__gm82gltf_texpixel
-            
             // bind materials
             __filter=texture_get_interpolation()
             if (__texture_norm!=noone) {
                 texture_set_stage("uNormTexture",__texture_norm)
                 texture_set_stage_interpolation("uNormTexture",__filter)
-                shader_pixel_uniform_f("uNormalMap_enabled",!keyboard_check(ord("N")))
+                shader_pixel_uniform_f("uNormalMap_enabled",1)
             } else shader_pixel_uniform_f("uNormalMap_enabled",0)
             if (__texture_occ!=noone) {
                 texture_set_stage("uOccTexture",__texture_occ)
