@@ -1,3 +1,6 @@
+#define MAX_JOINTS 32
+#define MAX_MORPHS 3
+
 struct VS_INPUT {
     float4 position: POSITION0;
     float2 texcoord: TEXCOORD0;
@@ -6,6 +9,9 @@ struct VS_INPUT {
     int4 joints: BLENDINDICES0;
     float4 weights: BLENDWEIGHT0;
     float4 color: COLOR0;
+    float3 position_morph[MAX_MORPHS]: POSITION1;
+    float3 normal_morph[MAX_MORPHS]: NORMAL1;
+    float3 tangent_morph[MAX_MORPHS]: TANGENT1;
 };
 
 struct VS_OUTPUT {
@@ -18,13 +24,21 @@ struct VS_OUTPUT {
 };
 
 matrix uMatrixW, uMatrixWV, uMatrixWVP;
-matrix uJointMatrix[32];
+matrix uJointMatrix[MAX_JOINTS];
 float  uSkinEnabled;
+float  uMorphWeights[MAX_MORPHS];
+int    uMorphCount;
 float  uHasVertexColor;
 float4 uBaseColor;
 
 VS_OUTPUT main(VS_INPUT input) {
 	VS_OUTPUT output;
+
+    for (int i = 0; i < uMorphCount; i++) {
+        input.position.xyz += input.position_morph[i] * uMorphWeights[i];
+        input.normal.xyz += input.normal_morph[i] * uMorphWeights[i];
+        input.tangent.xyz += input.tangent_morph[i] * uMorphWeights[i];
+    }
 
     if (uSkinEnabled) {
         matrix skin_mtx =

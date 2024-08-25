@@ -15,6 +15,7 @@
     globalvar __gm82gltf_primitive_hascolor;
     // stuff on attributes in primitives
     globalvar __gm82gltf_primitivebuffers;
+    globalvar __gm82gltf_primitivemorphs;
 
     globalvar __gm82gltf_shader_vertex_default;
     __gm82gltf_shader_vertex_default=shader_vertex_create_file(temp_directory+"\gm82\gltf_vertex.vs2")
@@ -72,6 +73,12 @@
                 if (__usage==vf_usage_color) __gm82gltf_primitive_hascolor[__gm82gltf_primitiveid]=true
                 __k+=1
             }
+            repeat (min(3,gltf_mesh_primitive_morph_count(__gltf,__i,__j))) {
+                vertex_format_add_custom(vf_type_float3,vf_usage_position,__k)
+                vertex_format_add_custom(vf_type_float3,vf_usage_normal,__k+1)
+                vertex_format_add_custom(vf_type_float3,vf_usage_tangent,__k+2)
+                __k+=3
+            }
             __gm82gltf_meshformats[__gm82gltf_meshid,__j]=vertex_format_end()
             // create vertex buffers
             __k=0 repeat (gltf_mesh_primitive_attribute_count(__gltf,__i,__j)) {
@@ -85,6 +92,20 @@
                         gltf_accessor_pointer(__gltf,__accessor),
                         gltf_accessor_size(__gltf,__accessor),
                         __stride)
+                __k+=1
+            }
+            // create vertex buffers for morph
+            __k=0
+            repeat (gltf_mesh_primitive_morph_count(__gltf,__i,__j)*3) {
+                __accessor=gltf_mesh_primitive_morph(__gltf,__i,__j,__k div 3,__k mod 3)
+                if (__accessor>=0) {
+                    __stride=gltf_accessor_stride(__gltf,__accessor)
+                    __gm82gltf_primitivemorphs[__gm82gltf_primitiveid,__k]=
+                    __gm82dx9_vertex_create_buffer_from_buffer(
+                        gltf_accessor_pointer(__gltf,__accessor),
+                        gltf_accessor_size(__gltf,__accessor),
+                        __stride)
+                } else __gm82gltf_primitivemorphs[__gm82gltf_primitiveid,__k]=-1
                 __k+=1
             }
             __gm82gltf_primitiveid+=1
@@ -232,7 +253,7 @@
 #define gltf_draw_node
     ///gltf_draw_node(gltf,node)
     var __i,__j,__k,__node,__mesh_id,__cullmode,__unique_mesh_id,__skin,__joints,__jointsize,__address,__unique_primitive_id,__material,__hascolor;
-    var __texture_id,__texture_base,__texture_norm,__texture_emi,__texture_occ,__texture_rough,__filter;
+    var __texture_id,__texture_base,__texture_norm,__texture_emi,__texture_occ,__texture_rough,__filter,__morph_count,__morph;
 
     if (is_string(argument1)) __node=gltf_get_node(argument0,argument1)
     else __node=argument1
@@ -260,6 +281,8 @@
     if (__skin>=0) {
         d3d_transform_stack_top()
     }
+
+    __morph_count=gltf_node_weight_count(argument0,argument1)
     
     texture_set_repeat(true)
     if (__mesh_id>=0) {    
@@ -343,6 +366,10 @@
             if (__skin>=0) {
                 __gm82dx9_shader_vertex_uniform_f_buffer(shader_vertex_uniform_get_address("uJointMatrix"),__joints,__jointsize)
             }
+            __gm82dx9_shader_vertex_uniform_4f(shader_vertex_uniform_get_address("uMorphCount"),__morph_count,0,0,0)
+            if (__morph_count>0) {
+                __gm82dx9_shader_vertex_uniform_f_buffer(shader_vertex_uniform_get_address("uMorphWeights"),gltf_node_sorted_weights_pointer(argument0,argument1),4*3*min(3,gltf_mesh_primitive_morph_count(argument0,__mesh_id,__i)))
+            }
 
             if (__material>=0) {
                 __gm82dx9_shader_vertex_uniform_f_buffer(shader_vertex_uniform_get_address("uBaseColor"),gltf_material_base_color_pointer(argument0,__material),16)
@@ -354,6 +381,20 @@
             __j=gltf_mesh_primitive_attribute_count(argument0,__mesh_id,__i)-1 repeat (__j) {
                 vertex_buffer_bind(__gm82gltf_primitivebuffers[__unique_primitive_id,__j],__j)
                 __j-=1
+            }
+            __k=gltf_mesh_primitive_attribute_count(argument0,__mesh_id,__i)
+            __j=0 repeat (gltf_mesh_primitive_morph_count(argument0,__mesh_id,__i)) {
+                __morph=gltf_node_sorted_morph(argument0,argument1,__j)
+                vertex_buffer_bind(
+                    __gm82gltf_primitivemorphs[__unique_primitive_id,__morph*3],
+                    __k+__j*3)
+                vertex_buffer_bind(
+                    __gm82gltf_primitivemorphs[__unique_primitive_id,__morph*3+1],
+                    __k+__j*3+1)
+                vertex_buffer_bind(
+                    __gm82gltf_primitivemorphs[__unique_primitive_id,__morph*3+2],
+                    __k+__j*3+2)
+                __j+=1
             }
             
             // bind materials

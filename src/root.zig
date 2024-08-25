@@ -17,6 +17,8 @@ var g_gltf_next_id: i32 = 1;
 var g_stringret: ?[:0]u8 = null;
 var g_matrices = std.ArrayList([16]f32).init(g_allocator.allocator());
 var g_data: ?[]u8 = null;
+var g_sorted_weights: ?[]f32 = null;
+var g_sorted_weight_ids: ?[]usize = null;
 
 fn return_string(string: []const u8) [*:0]const u8 {
     // make new string
@@ -209,6 +211,27 @@ fn accessor_stride(accessor: *const GLTF.Accessor) usize {
     return component_type_size(accessor.componentType) * type_count(accessor.type);
 }
 
+fn setup_weights(gltf_id: f64, node_id: f64) ?void {
+    const gltf = get_gltf(gltf_id) orelse return null;
+    const node = array_get(GLTF.Node, gltf.nodes, node_id) orelse return null;
+    const weights = node.weights orelse return null;
+
+    if (g_sorted_weight_ids) |w| g_allocator.allocator().free(w);
+    const new_ids = g_allocator.allocator().alloc(usize, weights.len) catch return null;
+    g_sorted_weight_ids = new_ids;
+    for (0..new_ids.len) |i| new_ids[i] = i;
+    std.sort.insertion(usize, new_ids, weights, struct {
+        fn inner(_weights: []const f32, a: usize, b: usize) bool {
+            return _weights[a] > _weights[b];
+        }
+    }.inner);
+
+    if (g_sorted_weights) |w| g_allocator.allocator().free(w);
+    const new_weights = g_allocator.allocator().alloc(f32, weights.len) catch return null;
+    g_sorted_weights = new_weights;
+    for (0..new_weights.len) |i| new_weights[i] = weights[new_ids[i]];
+}
+
 // EXPORTS
 
 export fn __gltf_reset() f64 {
@@ -305,12 +328,29 @@ export fn __gltf_load(filename: [*:0]const u8) f64 {
             }
         }
 
-        // assign parents
         if (parsed.value.nodes) |nodes| {
+            // assign parents
             for (nodes, 0..) |node, i| {
                 if (node.children) |children| {
                     for (children) |child| {
                         nodes[child].parent = i;
+                    }
+                }
+            }
+
+            // copy weights
+            if (parsed.value.meshes) |meshes| {
+                for (0..nodes.len) |i| {
+                    const node = &nodes[i];
+                    if (node.weights == null) {
+                        if (node.mesh) |mesh_id| {
+                            const mesh = meshes[mesh_id];
+                            if (mesh.weights) |weights| {
+                                const new_weights = owned_alloc.allocator().alloc(f32, weights.len) catch return -1;
+                                node.weights = new_weights;
+                                @memcpy(new_weights, weights);
+                            }
+                        }
                     }
                 }
             }
@@ -367,7 +407,8 @@ export fn __gltf_animate(gltf_id: f64, animation_id: f64, time: f64) f64 {
     var done = true;
     channels: for (animation.channels) |channel| {
         const node = array_get_mut(GLTF.Node, gltf.nodes, channel.target.node) orelse continue;
-        const output: []f32 = if (std.mem.eql(u8, channel.target.path, "translation")) &node.translation else if (std.mem.eql(u8, channel.target.path, "scale")) &node.scale else if (std.mem.eql(u8, channel.target.path, "rotation")) &node.rotation else continue;
+        const is_rotation = std.mem.eql(u8, channel.target.path, "rotation");
+        const output: []f32 = if (is_rotation) &node.rotation else if (std.mem.eql(u8, channel.target.path, "translation")) &node.translation else if (std.mem.eql(u8, channel.target.path, "scale")) &node.scale else if (std.mem.eql(u8, channel.target.path, "weights")) node.weights.? else continue;
         const sampler = animation.samplers[channel.sampler];
         if (std.mem.eql(u8, sampler.interpolation, "CUBICSPLINE")) {
             // unsupported
@@ -403,13 +444,19 @@ export fn __gltf_animate(gltf_id: f64, animation_id: f64, time: f64) f64 {
                     const keyframe_prev = input_data[prev];
                     const output_next = @as([*]const f32, @ptrCast(output_buffer.ptr))[output_offset / 4 + output.len .. output_offset + output.len * 2];
                     const lerp = (time - keyframe_prev) / (keyframe_next - keyframe_prev);
-                    if (output.len == 3) {
-                        // translation or scale -> straight lerp
-                        const current: @Vector(3, f32) = output_current[0..3].*;
-                        const current_next: @Vector(3, f32) = output_next[0..3].*;
-                        const lerpsplat: @Vector(3, f32) = @splat(@floatCast(lerp));
-                        const lerped: @Vector(3, f32) = std.math.lerp(current, current_next, lerpsplat);
-                        @memcpy(output[0..3], @as([3]f32, lerped)[0..]);
+                    if (!is_rotation) {
+                        // translation, scale, or morph weights -> straight lerp
+                        if (output.len == 3) {
+                            const current: @Vector(3, f32) = output_current[0..3].*;
+                            const current_next: @Vector(3, f32) = output_next[0..3].*;
+                            const lerpsplat: @Vector(3, f32) = @splat(@floatCast(lerp));
+                            const lerped: @Vector(3, f32) = std.math.lerp(current, current_next, lerpsplat);
+                            @memcpy(output[0..3], @as([3]f32, lerped)[0..]);
+                        } else {
+                            for (0..output.len) |j| {
+                                output[j] = std.math.lerp(output_current[j], output_next[j], @as(f32, @floatCast(lerp)));
+                            }
+                        }
                     } else {
                         // rotation -> slerp
                         const current: @Vector(4, f32) = output_current[0..4].*;
@@ -675,15 +722,15 @@ export fn gltf_node_weight_count(gltf_id: f64, node_id: f64) f64 {
     return @floatFromInt(weights.len);
 }
 
-export fn gltf_node_weights_pointer(gltf_id: f64, node_id: f64) f64 {
-    const gltf = get_gltf(gltf_id) orelse return -1;
-    const node = array_get(GLTF.Node, gltf.nodes, node_id) orelse return -1;
-    const weights = blk: {
-        if (node.weights) |weights| break :blk weights;
-        const mesh = array_get(GLTF.Mesh, gltf.meshes, node.mesh) orelse return -1;
-        break :blk mesh.weights orelse return 0;
-    };
-    return @floatFromInt(@intFromPtr(weights.ptr));
+export fn gltf_node_sorted_morph(gltf_id: f64, node_id: f64, morph_id: f64) f64 {
+    setup_weights(gltf_id, node_id) orelse return -1;
+    const id = array_get(usize, g_sorted_weight_ids, morph_id) orelse return -1;
+    return @floatFromInt(id.*);
+}
+
+export fn gltf_node_sorted_weights_pointer(gltf_id: f64, node_id: f64) f64 {
+    setup_weights(gltf_id, node_id) orelse return 0;
+    return @floatFromInt(@intFromPtr(g_sorted_weights.?.ptr));
 }
 
 export fn gltf_camera_type(gltf_id: f64, camera_id: f64) [*:0]const u8 {
@@ -764,6 +811,13 @@ export fn gltf_mesh_primitive_morph_count(gltf_id: f64, mesh_id: f64, primitive_
     const primitive = get_mesh_primitive(gltf_id, mesh_id, primitive_id) orelse return -1;
     const targets = primitive.targets orelse return 0;
     return @floatFromInt(targets.len);
+}
+
+export fn gltf_mesh_primitive_morph(gltf_id: f64, mesh_id: f64, primitive_id: f64, morph_id: f64, attribute_id: f64) f64 {
+    const primitive = get_mesh_primitive(gltf_id, mesh_id, primitive_id) orelse return -1;
+    const target = array_get(std.json.ArrayHashMap(usize), primitive.targets, morph_id) orelse return -1;
+    const attribute = array_get([]const u8, &[3][]const u8{ "POSITION", "NORMAL", "TANGENT" }, attribute_id) orelse return -1;
+    return @floatFromInt(target.map.get(attribute.*) orelse return -1);
 }
 
 export fn gltf_mesh_primitive_morph_attribute_count(gltf_id: f64, mesh_id: f64, primitive_id: f64, morph_id: f64) f64 {

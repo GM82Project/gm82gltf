@@ -160,7 +160,7 @@ pub const Node = struct {
     scale: [3]f32 = .{ 1, 1, 1 },
     translation: [3]f32 = .{ 0, 0, 0 },
     name: ?[]const u8 = null,
-    weights: ?[]const f32 = null,
+    weights: ?[]f32 = null,
     // not in the spec but it's convenient
     parent: ?usize = null,
 };
