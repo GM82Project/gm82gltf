@@ -1,3 +1,19 @@
+SamplerState uBaseTexture: register(s0);
+SamplerState uNormTexture;
+SamplerState uEmissiveTexture;
+SamplerState uOccTexture;
+SamplerState uRoughTexture;
+SamplerState uEnvMap;
+
+matrix uMatrixV;
+
+float uNormalMap_enabled;
+float uEmissiveMap_enabled;
+float uOcclusionMap_enabled;
+float uRoughnessMap_enabled;
+float3 uEyePos;
+
+
 //game maker lighting
     float4 uLightColor[8];
     float4 uLightPosRange[8];
@@ -13,10 +29,6 @@
         return lerp(color, uFogColor, saturate((distance(wpos,ipos) - uFogSettings.y) * uFogSettings.z));
     }
 
-    float4 doDirLight(float3 normal, float3 dir, float4 color) {
-        return (saturate(dot(normalize(normal), normalize(dir))) * color);
-    }
-
     float4 doPointLight(float3 wpos, float3 normal, float4 posrange, float4 color) {
         float3 diffvec = wpos - posrange.xyz;
         float len = length(diffvec);        
@@ -26,18 +38,23 @@
             atten = 0.0;
         }
         
-        return (saturate(dot(normal, diffvec/len)) * atten) * color;
+        return (saturate(dot(-normal, diffvec/len)) * atten) * color;
     }
 
-    float4 doLighting(float4 color, float3 wpos, float3 normal, float4 ambient) {
-        float4 accumcol = ambient;
+    float4 doLighting(float4 color, float3 wpos, float3 normal, float4 ambient, float metal, float3 eyevector, float4 environment) {
+        float4 diffuse = ambient + (environment - ambient) * metal;
+        float4 specular = float4(0,0,0,0);            
 
         for (int i = 0; i < 8; i++) {
-            accumcol += doDirLight(normal, uLightDirection[i].xyz, uLightColor[i]);
-            accumcol += doPointLight(wpos, normal, uLightPosRange[i], uLightColor[i]);
+            float3 dir = -normalize(uLightDirection[i].xyz);
+        
+            diffuse += saturate(dot(normal,dir)) * uLightColor[i] * (1.0-metal);
+            specular += pow(max(dot(reflect(-dir,normal),eyevector), 0.0), 40.0) * uLightColor[i];    
+
+            //accumcol += doPointLight(wpos, normal, uLightPosRange[i], uLightColor[i]);
         }
 
-        return saturate(accumcol) * color;
+        return saturate(diffuse) * color + saturate(specular) * color.a;
     }
 //end game maker lighting
 
@@ -53,18 +70,6 @@ struct PS_OUTPUT {
     float4 color: COLOR0;
 };
 
-SamplerState uBaseTexture: register(s0);
-SamplerState uNormTexture;
-SamplerState uEmissiveTexture;
-SamplerState uOccTexture;
-SamplerState uRoughTexture;
-
-float uNormalMap_enabled;
-float uEmissiveMap_enabled;
-float uOcclusionMap_enabled;
-float uRoughnessMap_enabled;
-float3 uEyePos;
-
 PS_OUTPUT main(PS_INPUT input) {
     PS_OUTPUT output;
 
@@ -74,20 +79,28 @@ PS_OUTPUT main(PS_INPUT input) {
     float4 occlusion = tex2D(uOccTexture, input.texcoord).r;
 
 
+    //normals
+    float3 inormnorm = normalize(input.normal);
+    float3 itangnorm = normalize(input.tangent);
+    float3 binormal = normalize(cross(inormnorm,itangnorm));
+    float3 finormal = inormnorm;
+
+    float3 normap = tex2D(uNormTexture, input.texcoord).rgb * 2 - 1;
+    if (uNormalMap_enabled>0.5) finormal = normalize(itangnorm * normap.r + binormal * normap.g + inormnorm * normap.b);
+    float3 eyevector = normalize(input.worldpos - uEyePos);
+    
+    
     //metalrough
     float4 color = tex2D(uRoughTexture, input.texcoord);
     float rough = color.g;
     float metal = color.b;
     
+    if (uRoughnessMap_enabled<0.5) {
+        rough = 0.0;
+        metal = 0.0;
+    }
     
-    //normals
-    float3 inormnorm = normalize(input.normal);
-    float3 itangnorm = normalize(input.tangent);
-    float3 binormal = normalize(cross(itangnorm,inormnorm));
-    float3 finormal = inormnorm;
-
-    float3 normap = tex2D(uNormTexture, input.texcoord).rgb * 2 - 1;
-    if (uNormalMap_enabled>0.5) finormal = normalize(itangnorm * normap.r + binormal * normap.g + inormnorm * normap.b);
+    float4 environment = tex2D(uEnvMap, normalize(mul(uMatrixV,float4(finormal,0.0))).xy*float2(0.5,-0.5)+0.5);
     
     
     //finalize
@@ -95,9 +108,9 @@ PS_OUTPUT main(PS_INPUT input) {
     
     if (uOcclusionMap_enabled<0.5) occlusion=float4(1.0,1.0,1.0,1.0);
     
-    if (uLightingEnabled>0.5) color = doLighting(color, input.worldpos, finormal, uAmbientColor * occlusion);
+    if (uLightingEnabled>0.5) color = doLighting(color, input.worldpos, finormal, uAmbientColor * occlusion, metal, eyevector, environment);
     
-    if (uEmissiveMap_enabled>0.5) color = saturate(color+emissive)* occlusion;
+    if (uEmissiveMap_enabled>0.5) color = saturate(color+emissive);
 
     //if (uFogSettings.x) color = doFog(input.worldpos.xyz, uEyePos, color);
 

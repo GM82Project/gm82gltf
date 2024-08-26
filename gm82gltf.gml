@@ -332,6 +332,9 @@
             
             __gm82dx9_shader_pixel_uniform_4f(shader_pixel_uniform_get_address("uLightingEnabled"),1,0,0,0)
             shader_pixel_uniform_color("uAmbientColor",d3d_light_get_ambient(),1)
+            
+            d3d_get_projection_origin()
+            __gm82dx9_shader_pixel_uniform_4f(shader_pixel_uniform_get_address("uEyePos"),d3d_get_projection_origin[0],d3d_get_projection_origin[1],d3d_get_projection_origin[2],0)
         } else __gm82dx9_shader_pixel_uniform_4f(shader_pixel_uniform_get_address("uLightingEnabled"),0,0,0,0)
         //shader_pixel_uniform_f("uFogSettings",0,0,0)
         //shader_pixel_uniform_color("uFogColor",$ff00ff)

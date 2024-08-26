@@ -53,12 +53,9 @@ VS_OUTPUT main(VS_INPUT input) {
 
     output.position = mul(uMatrixWVP, input.position);  
     output.texcoord = input.texcoord;
-    output.normal = normalize(mul(uMatrixWV, input.normal).xyz);
-    output.tangent = normalize(mul(uMatrixWV, input.tangent).xyz);
-    output.worldpos = mul((uMatrixW), input.position).xyz;
-    
-    //output.normal.z = -output.normal.z;
-    //output.ipos = float4(uMatrixWV._41,uMatrixWV._42,uMatrixWV._43,1.0);
+    output.normal = normalize(mul(uMatrixW, float4(input.normal.xyz,0.0)).xyz);
+    output.tangent = normalize(mul(uMatrixW, float4(input.tangent.xyz,0.0)).xyz);
+    output.worldpos = mul(uMatrixW, input.position).xyz;
 
     if (uHasVertexColor<0.5) input.color = float4(1,1,1,1);
     
