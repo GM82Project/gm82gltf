@@ -3,7 +3,7 @@
 	"folder": "gm82",
 	"version": "1.0",
 	"author": "Floogle",
-	"date": "20/08/2024",
+	"date": "26/08/2024",
 	"license": "Free to use, also for commercial games.",
 	"description": "",
 	"helpfile": "",
@@ -1226,8 +1226,8 @@
 			"constants": []
 		},
 		{
-			"filename": "gltf_pixel.ps2",
-			"origname": "zig-out/pixel.ps2",
+			"filename": "gltf_pixel.ps3",
+			"origname": "zig-out/pixel.ps3",
 			"kind": 4,
 			"init": "",
 			"final": "",
@@ -1235,8 +1235,8 @@
 			"constants": []
 		},
 		{
-			"filename": "gltf_vertex.vs2",
-			"origname": "zig-out/vertex.vs2",
+			"filename": "gltf_vertex.vs3",
+			"origname": "zig-out/vertex.vs3",
 			"kind": 4,
 			"init": "",
 			"final": "",

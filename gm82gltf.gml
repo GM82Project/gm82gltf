@@ -18,10 +18,10 @@
     globalvar __gm82gltf_primitivemorphs;
 
     globalvar __gm82gltf_shader_vertex_default;
-    __gm82gltf_shader_vertex_default=shader_vertex_create_file(temp_directory+"\gm82\gltf_vertex.vs2")
+    __gm82gltf_shader_vertex_default=shader_vertex_create_file(temp_directory+"\gm82\gltf_vertex.vs3")
 
     globalvar __gm82gltf_shader_pixel_default;
-    __gm82gltf_shader_pixel_default=shader_pixel_create_file(temp_directory+"\gm82\gltf_pixel.ps2")
+    __gm82gltf_shader_pixel_default=shader_pixel_create_file(temp_directory+"\gm82\gltf_pixel.ps3")
 
     globalvar __gm82gltf_shader_vertex; __gm82gltf_shader_vertex=__gm82gltf_shader_vertex_default
     globalvar __gm82gltf_shader_pixel; __gm82gltf_shader_pixel=__gm82gltf_shader_pixel_default

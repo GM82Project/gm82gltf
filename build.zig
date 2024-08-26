@@ -59,10 +59,10 @@ pub fn build(b: *std.Build) !void {
     gm82gex_run.step.dependOn(&artifact_step.step);
     b.getInstallStep().dependOn(&gm82gex_run.step);
 
-    const vshader_compile_step = try fxc(b, fxc_file, "/Tvs_3_0", "vertex.vs2", "vertex.hlsl");
+    const vshader_compile_step = try fxc(b, fxc_file, "/Tvs_3_0", "vertex.vs3", "vertex.hlsl");
     vshader_compile_step.step.dependOn(&fxc_file.step);
     gm82gex_run.step.dependOn(&vshader_compile_step.step);
-    const pshader_compile_step = try fxc(b, fxc_file, "/Tps_3_0", "pixel.ps2", "pixel.hlsl");
+    const pshader_compile_step = try fxc(b, fxc_file, "/Tps_3_0", "pixel.ps3", "pixel.hlsl");
     pshader_compile_step.step.dependOn(&fxc_file.step);
     gm82gex_run.step.dependOn(&pshader_compile_step.step);
 
