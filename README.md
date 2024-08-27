@@ -3,7 +3,7 @@
 This extension allows for using the glTF model format in Game Maker 8.2. It is currently compatible with glTF files exported from Blender; if you've got a glTF that displays incorrectly, please file an issue or pull request.
 
 Most standard glTF features are supported, including:
-* Base, normal, occlusion, and emission textures
+* Base, metallic-roughness, normal, occlusion, and emission textures
 * Metallic materials with environment maps
 * Animations
 * Skinned meshes (aka bone animations)
