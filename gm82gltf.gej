@@ -1221,6 +1221,17 @@
 						2
 					],
 					"returntype": 2
+				},
+				{
+					"name": "gltf_set_environment_map",
+					"extname": "",
+					"calltype": 2,
+					"helpline": "gltf_set_environment_map(texture)",
+					"hidden": false,
+					"argtypes": [
+						2
+					],
+					"returntype": 2
 				}
 			],
 			"constants": []
