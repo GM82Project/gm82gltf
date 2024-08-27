@@ -310,6 +310,9 @@ export fn __gltf_load(filename: [*:0]const u8) f64 {
 
         const parsed = json_parsed orelse break :blk;
 
+        // if any extensions are required, we can't display this
+        if (parsed.value.extensionsRequired) |_| break :blk;
+
         const buffer_count = (parsed.value.buffers orelse &[0]GLTF.Buffer{}).len;
         const buffers = owned_alloc.allocator().alloc([]align(4) const u8, buffer_count) catch break :blk;
 
