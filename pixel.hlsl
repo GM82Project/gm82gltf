@@ -41,18 +41,20 @@ float3 uEyePos;
         return (saturate(dot(-normal, diffvec/len)) * atten) * color;
     }
 
-    float4 doLighting(float4 color, float3 wpos, float3 normal, float4 ambient, float metal, float3 eyevector, float4 environment) {
-        float4 diffuse = ambient + (environment - ambient) * metal;
+    float4 doLighting(float4 color, float3 wpos, float3 normal, float4 ambient, float metal, float rough, float3 eyevector, float4 environment) {
+        float4 diffuse = ambient;
         float4 specular = float4(0,0,0,0);            
 
         for (int i = 0; i < 8; i++) {
             float3 dir = -normalize(uLightDirection[i].xyz);
         
-            diffuse += saturate(dot(normal,dir)) * uLightColor[i] * (1.0-metal);
-            specular += pow(max(dot(reflect(-dir,normal),eyevector), 0.0), 40.0) * uLightColor[i];    
+            diffuse += saturate(dot(normal,dir)) * uLightColor[i];
+            specular += (1.0-0.9*rough) * pow(max(dot(reflect(dir,normal),eyevector), 0.0), 200.0/(1.0+rough*100.0)) * uLightColor[i];    
 
             //accumcol += doPointLight(wpos, normal, uLightPosRange[i], uLightColor[i]);
         }
+
+        diffuse = lerp(diffuse,diffuse*lerp(environment,ambient,rough),metal);
 
         return saturate(diffuse) * color + saturate(specular) * color.a;
     }
@@ -108,7 +110,7 @@ PS_OUTPUT main(PS_INPUT input) {
     
     if (uOcclusionMap_enabled<0.5) occlusion=float4(1.0,1.0,1.0,1.0);
     
-    if (uLightingEnabled>0.5) color = doLighting(color, input.worldpos, finormal, uAmbientColor * occlusion, metal, eyevector, environment);
+    if (uLightingEnabled>0.5) color = doLighting(color, input.worldpos, finormal, uAmbientColor * occlusion, metal, rough, eyevector, environment);
     
     if (uEmissiveMap_enabled>0.5) color = saturate(color+emissive);
 
