@@ -23,7 +23,7 @@ struct VS_OUTPUT {
     float4 color: COLOR0;
 };
 
-matrix uMatrixW, uMatrixWV, uMatrixWVP;
+matrix uMatrixW, uMatrixWVP;
 matrix uJointMatrix[MAX_JOINTS];
 float  uSkinEnabled;
 float  uMorphWeights[MAX_MORPHS];

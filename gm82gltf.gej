@@ -3,7 +3,7 @@
 	"folder": "gm82",
 	"version": "1.0",
 	"author": "Floogle",
-	"date": "26/08/2024",
+	"date": "27/08/2024",
 	"license": "Free to use, also for commercial games.",
 	"description": "",
 	"helpfile": "",
@@ -1237,6 +1237,15 @@
 		{
 			"filename": "gltf_vertex.vs3",
 			"origname": "zig-out/vertex.vs3",
+			"kind": 4,
+			"init": "",
+			"final": "",
+			"functions": [],
+			"constants": []
+		},
+		{
+			"filename": "envmap.jpg",
+			"origname": "envmap.jpg",
 			"kind": 4,
 			"init": "",
 			"final": "",
