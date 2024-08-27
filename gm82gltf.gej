@@ -761,6 +761,31 @@
 					"returntype": 2
 				},
 				{
+					"name": "gltf_node_sorted_morph",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_node_sorted_morph(gltf,node,morph)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_node_sorted_weights_pointer",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_node_sorted_weights_pointer(gltf,node)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
 					"name": "gltf_node_sx",
 					"extname": "",
 					"calltype": 12,
@@ -825,31 +850,6 @@
 					"extname": "",
 					"calltype": 12,
 					"helpline": "gltf_node_tz(gltf,node)",
-					"hidden": false,
-					"argtypes": [
-						2,
-						2
-					],
-					"returntype": 2
-				},
-				{
-					"name": "gltf_node_sorted_morph",
-					"extname": "",
-					"calltype": 12,
-					"helpline": "gltf_node_sorted_morph(gltf,node,morph)",
-					"hidden": false,
-					"argtypes": [
-						2,
-						2,
-						2
-					],
-					"returntype": 2
-				},
-				{
-					"name": "gltf_node_sorted_weights_pointer",
-					"extname": "",
-					"calltype": 12,
-					"helpline": "gltf_node_sorted_weights_pointer(gltf,node)",
 					"hidden": false,
 					"argtypes": [
 						2,
@@ -1118,53 +1118,6 @@
 			"final": "",
 			"functions": [
 				{
-					"name": "__gltf_init",
-					"extname": "",
-					"calltype": 2,
-					"helpline": "",
-					"hidden": true,
-					"argtypes": [],
-					"returntype": 2
-				},
-				{
-					"name": "gltf_load",
-					"extname": "",
-					"calltype": 2,
-					"helpline": "gltf_load(filename)",
-					"hidden": false,
-					"argtypes": [
-						2
-					],
-					"returntype": 2
-				},
-				{
-					"name": "__gltf_format_add",
-					"extname": "",
-					"calltype": 2,
-					"helpline": "",
-					"hidden": true,
-					"argtypes": null,
-					"returntype": 2
-				},
-				{
-					"name": "__gltf_create_index_buffer",
-					"extname": "",
-					"calltype": 2,
-					"helpline": "",
-					"hidden": true,
-					"argtypes": null,
-					"returntype": 2
-				},
-				{
-					"name": "__gltf_identify_meshless",
-					"extname": "",
-					"calltype": 2,
-					"helpline": "",
-					"hidden": true,
-					"argtypes": null,
-					"returntype": 2
-				},
-				{
 					"name": "gltf_animate",
 					"extname": "",
 					"calltype": 2,
@@ -1190,12 +1143,15 @@
 					"returntype": 2
 				},
 				{
-					"name": "gltf_use_shader",
+					"name": "gltf_draw_node",
 					"extname": "",
 					"calltype": 2,
-					"helpline": "gltf_use_shader([vertex,pixel])",
+					"helpline": "gltf_draw_node(gltf,node)",
 					"hidden": false,
-					"argtypes": null,
+					"argtypes": [
+						2,
+						2
+					],
 					"returntype": 2
 				},
 				{
@@ -1211,13 +1167,12 @@
 					"returntype": 2
 				},
 				{
-					"name": "gltf_draw_node",
+					"name": "gltf_load",
 					"extname": "",
 					"calltype": 2,
-					"helpline": "gltf_draw_node(gltf,node)",
+					"helpline": "gltf_load(filename)",
 					"hidden": false,
 					"argtypes": [
-						2,
 						2
 					],
 					"returntype": 2
@@ -1231,6 +1186,51 @@
 					"argtypes": [
 						2
 					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_use_shader",
+					"extname": "",
+					"calltype": 2,
+					"helpline": "gltf_use_shader([vertex,pixel])",
+					"hidden": false,
+					"argtypes": null,
+					"returntype": 2
+				},
+				{
+					"name": "__gltf_create_index_buffer",
+					"extname": "",
+					"calltype": 2,
+					"helpline": "",
+					"hidden": true,
+					"argtypes": null,
+					"returntype": 2
+				},
+				{
+					"name": "__gltf_format_add",
+					"extname": "",
+					"calltype": 2,
+					"helpline": "",
+					"hidden": true,
+					"argtypes": null,
+					"returntype": 2
+				},
+				{
+					"name": "__gltf_identify_meshless",
+					"extname": "",
+					"calltype": 2,
+					"helpline": "",
+					"hidden": true,
+					"argtypes": null,
+					"returntype": 2
+				},
+				{
+					"name": "__gltf_init",
+					"extname": "",
+					"calltype": 2,
+					"helpline": "",
+					"hidden": true,
+					"argtypes": [],
 					"returntype": 2
 				}
 			],
