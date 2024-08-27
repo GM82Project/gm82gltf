@@ -374,7 +374,7 @@ export fn __gltf_load(filename: [*:0]const u8) f64 {
     return -1;
 }
 
-export fn gltf_destroy(id: f64) f64 {
+export fn __gltf_destroy(id: f64) f64 {
     const entry = g_gltfs.fetchSwapRemove(@intFromFloat(id)) orelse return 0;
     entry.value.deinit();
     return 0;
@@ -1121,7 +1121,7 @@ test "gltf stuff" {
     try testing.expectEqual(1, gltf_node_child(1, 0, 0));
     try testing.expectEqual(648, g_gltfs.get(1).?.buffers[0].len);
     try testing.expectEqualStrings("NORMAL", std.mem.span(gltf_mesh_primitive_attribute_semantic(1, 0, 0, 0)));
-    try testing.expectEqual(0, gltf_destroy(1));
+    try testing.expectEqual(0, __gltf_destroy(1));
 }
 
 test "matrices" {

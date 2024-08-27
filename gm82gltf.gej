@@ -191,10 +191,10 @@
 					"returntype": 2
 				},
 				{
-					"name": "gltf_destroy",
+					"name": "__gltf_destroy",
 					"extname": "",
 					"calltype": 12,
-					"helpline": "gltf_destroy(gltf)",
+					"helpline": "__gltf_destroy(gltf)",
 					"hidden": false,
 					"argtypes": [
 						2
@@ -1171,6 +1171,17 @@
 					"extname": "",
 					"calltype": 2,
 					"helpline": "gltf_load(filename)",
+					"hidden": false,
+					"argtypes": [
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_destroy",
+					"extname": "",
+					"calltype": 2,
+					"helpline": "gltf_destroy(gltf)",
 					"hidden": false,
 					"argtypes": [
 						2

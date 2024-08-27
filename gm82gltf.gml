@@ -133,6 +133,37 @@
     return __gltf
 
 
+#define gltf_destroy
+    ///gltf_destroy(gltf)
+    var __i,__j,__k,__mesh,__primitive;
+    // free textures
+    __i=0 repeat (gltf_texture_count(argument0)) {
+        background_delete(__gm82gltf_backgrounds[argument0,__i])
+    }
+    // free vertex buffers
+    __i=0 repeat (gltf_mesh_count(argument0)) {
+        __mesh=__gm82gltf_meshes[argument0,__i]
+        __j=0 repeat (gltf_mesh_primitive_count(argument0,__i)) {
+            __primitive=__gm82gltf_primitives[__mesh,__j]
+            if (gltf_mesh_primitive_indices_accessor(argument0,__i,__j))
+                index_buffer_delete(__gm82gltf_meshindices[__mesh,__j])
+            vertex_format_delete(__gm82gltf_meshformats[__mesh,__j])
+            __k=0 repeat (gltf_mesh_primitive_attribute_count(argument0,__i,__j)) {
+                vertex_buffer_delete(__gm82gltf_primitivebuffers[__primitive,__k])
+                __k+=1
+            }
+            __k=0 repeat (gltf_mesh_primitive_morph_count(__gltf,__i,__j)*3) {
+                vertex_buffer_delete(__gm82gltf_primitivebuffers[__primitive,__k])
+                __k+=1
+            }
+            __j+=1
+        }
+        __i+=1
+    }
+    // delete the gltf
+    __gltf_destroy(argument0)
+
+
 #define __gltf_format_add
     ///__gltf_format_add(type,comptype,normalized,semantic,slot):usage
     var __type;
