@@ -22,4 +22,4 @@ Important functions include:
 * `gltf_animation_length(gltf,animation)` - Returns the timestamp of the last keyframe of the given animation, in seconds. Animation names and IDs are both accepted.
 * `gltf_set_environment_map(texture)` - Sets the environment map to a given texture (use `background_get_texture` or `sprite_get_texture`).
 
-Default environmment map texture created by Dave Parsons.
+[Default environmment map texture](https://web.archive.org/web/20200510185053/https://blenderartists.org/t/free-high-res-skymaps-massive-07-update/318212) created by Dave Parsons.
