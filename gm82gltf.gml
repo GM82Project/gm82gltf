@@ -292,7 +292,7 @@
         d3d_transform_stack_top()
     }
 
-    __morph_count=gltf_node_weight_count(argument0,argument1)
+    __morph_count=min(3,gltf_node_weight_count(argument0,argument1))
     
     texture_set_repeat(true)
     if (__mesh_id>=0) {    
@@ -381,7 +381,7 @@
             }
             shader_vertex_uniform_f("uMorphCount",__morph_count)
             if (__morph_count>0) {
-                __gm82dx9_shader_vertex_uniform_f_buffer(shader_vertex_uniform_get_address("uMorphWeights"),gltf_node_sorted_weights_pointer(argument0,argument1),4*3*min(3,gltf_mesh_primitive_morph_count(argument0,__mesh_id,__i)))
+                __gm82dx9_shader_vertex_uniform_f_buffer(shader_vertex_uniform_get_address("uMorphWeights"),gltf_node_sorted_weights_spaced_pointer(argument0,argument1),4*4*__morph_count)
             }
 
             if (__material>=0) {

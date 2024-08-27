@@ -227,9 +227,10 @@ fn setup_weights(gltf_id: f64, node_id: f64) ?void {
     }.inner);
 
     if (g_sorted_weights) |w| g_allocator.allocator().free(w);
-    const new_weights = g_allocator.allocator().alloc(f32, weights.len) catch return null;
+    const new_weights = g_allocator.allocator().alloc(f32, weights.len * 4) catch return null;
     g_sorted_weights = new_weights;
-    for (0..new_weights.len) |i| new_weights[i] = weights[new_ids[i]];
+    @memset(new_weights, 0);
+    for (0..new_ids.len) |i| new_weights[i * 4] = weights[new_ids[i]];
 }
 
 // EXPORTS
@@ -728,7 +729,7 @@ export fn gltf_node_sorted_morph(gltf_id: f64, node_id: f64, morph_id: f64) f64 
     return @floatFromInt(id.*);
 }
 
-export fn gltf_node_sorted_weights_pointer(gltf_id: f64, node_id: f64) f64 {
+export fn gltf_node_sorted_weights_spaced_pointer(gltf_id: f64, node_id: f64) f64 {
     setup_weights(gltf_id, node_id) orelse return 0;
     return @floatFromInt(@intFromPtr(g_sorted_weights.?.ptr));
 }
