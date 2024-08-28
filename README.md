@@ -6,7 +6,7 @@ Most standard glTF features are supported, including:
 * Base, metallic-roughness, normal, occlusion, and emission textures
 * Metallic materials with environment maps
 * Animations
-* Skinned meshes (aka bone animations)
+* Skinned meshes (aka bone animations) with up to 4 joints per vertex
 * Up to 3 morph targets (aka blend shapes) with position, normal, and tangent
 * No extensions
 
