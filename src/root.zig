@@ -117,6 +117,7 @@ fn get_buffer_view(glb: *GLB, id: usize) ?[]const u8 {
     return glb.buffers[bv.buffer][bv.byteOffset .. bv.byteOffset + bv.byteLength];
 }
 
+// fast matrix algorithms largely lifted from DirectXMath
 fn create_rotation(quaternion: @Vector(4, f32)) [16]f32 {
     const const1110 = @Vector(4, f32){ 1, 1, 1, 0 };
     const nothing = @Vector(1, f32){0};
