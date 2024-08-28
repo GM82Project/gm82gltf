@@ -329,8 +329,8 @@
     if (__mesh_id>=0) {    
         shader_set(__gm82gltf_shader_vertex,__gm82gltf_shader_pixel)
     
+        //bind lights
         if (d3d_get_lighting()) {
-            //bind lights
             var __i,__lb;
             
             __lb=__gm82gltf_lightbuffer
@@ -377,9 +377,15 @@
             d3d_get_projection_origin()
             shader_pixel_uniform_f("uEyePos",d3d_get_projection_origin[0],d3d_get_projection_origin[1],d3d_get_projection_origin[2])
         } else shader_pixel_uniform_f("uLightingEnabled",0)
-        //shader_pixel_uniform_f("uFogSettings",0,0,0)
-        //shader_pixel_uniform_color("uFogColor",$ff00ff)
-    
+        
+        //bind fog
+        if (d3d_get_fog_enabled()) {
+            var __start;__start=d3d_get_fog_start()
+            shader_pixel_uniform_f("uFogSettings",1,__start,1/(d3d_get_fog_end()-__start))
+            shader_pixel_uniform_color("uFogColor",d3d_get_fog_color())
+        } else shader_pixel_uniform_f("uFogSettings",0)
+        
+        //for all mesh
         __unique_mesh_id=__gm82gltf_meshes[argument0,__mesh_id]
         __i=0 repeat (gltf_mesh_primitive_count(argument0,__mesh_id)) {
             __unique_primitive_id=__gm82gltf_primitives[__unique_mesh_id,__i]
