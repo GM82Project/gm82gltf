@@ -314,9 +314,11 @@
     __gm82dx9_set_matrix_from_buffer(gltf_node_matrix_pointer(argument0,__node))
     d3d_transform_add_stack_top()
 
-    // reversed from gltf spec because dx9 is left-handed
-    if (d3d_transform_get_determinant()>0) __cullmode=cull_clockwise
-    else __cullmode=cull_counterclockwise
+    // if projection determinant > 0, then we're right-handed
+    // if we're right-handed and node transform determinant > 0, then ccw
+    // for left-handed it's reversed
+    if (sign(d3d_projection_get_determinant())==sign(d3d_transform_get_determinant())) __cullmode=cull_counterclockwise
+    else __cullmode=cull_clockwise
 
     // "Only the joint transforms are applied to the skinned mesh; the transform of the skinned mesh node MUST be ignored."
     if (__skin>=0) {
