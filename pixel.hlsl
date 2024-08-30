@@ -11,6 +11,8 @@ float uNormalMap_enabled;
 float uEmissiveMap_enabled;
 float uOcclusionMap_enabled;
 float uRoughnessMap_enabled;
+float uRoughness;
+float uMetalness;
 float3 uEyePos;
 
 //game maker lighting
@@ -83,9 +85,9 @@ PS_OUTPUT main(PS_INPUT input) {
     //metalrough
     float4 environment = tex2D(uEnvMap,normalize(mul(uMatrixV,float4(finormal,0.0))).xy*float2(0.5,-0.5)+0.5);
     float4 color = tex2D(uRoughTexture,input.texcoord);
-    float rough = color.g;
-    float metal = color.b;
-    if (uRoughnessMap_enabled<0.5) {rough = 0.0; metal = 0.0;}
+    float rough = color.g * uRoughness;
+    float metal = color.b * uMetalness;
+    if (uRoughnessMap_enabled<0.5) {rough = uRoughness; metal = uMetalness;}
 
     //finalize
     float4 albedo = tex2D(uBaseTexture,input.texcoord);
@@ -95,9 +97,10 @@ PS_OUTPUT main(PS_INPUT input) {
     if (uOcclusionMap_enabled<0.5) occlusion=float4(1.0,1.0,1.0,1.0);
 
     if (uLightingEnabled>0.5) color = doLighting(color,input.worldpos,finormal,uAmbientColor*occlusion,metal,rough,eyevector,environment);
+    else color = lerp(color,color*lerp(environment,uAmbientColor*occlusion,rough),metal);
 
     float4 emissive = tex2D(uEmissiveTexture,input.texcoord);
-    if (uEmissiveMap_enabled>0.5) color = saturate(color+emissive);
+    if (uEmissiveMap_enabled>0.5) color = max(color,emissive);
 
     if (uFogSettings.x) color = doFog(input.worldpos.xyz,uEyePos,color);
 

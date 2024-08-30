@@ -955,6 +955,16 @@ export fn gltf_material_base_texture(gltf_id: f64, material_id: f64) f64 {
     return @floatFromInt(baseColorTexture.index);
 }
 
+export fn gltf_material_roughness(gltf_id: f64, material_id: f64) f64 {
+    const material = get_material(gltf_id, material_id) orelse return -1;
+    return material.pbrMetallicRoughness.roughnessFactor;
+}
+
+export fn gltf_material_metalness(gltf_id: f64, material_id: f64) f64 {
+    const material = get_material(gltf_id, material_id) orelse return -1;
+    return material.pbrMetallicRoughness.metallicFactor;
+}
+
 export fn gltf_material_roughness_texture(gltf_id: f64, material_id: f64) f64 {
     const material = get_material(gltf_id, material_id) orelse return -1;
     const roughTexture = material.pbrMetallicRoughness.metallicRoughnessTexture orelse return -1;

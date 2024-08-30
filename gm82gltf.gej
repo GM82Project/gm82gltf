@@ -2,8 +2,8 @@
 	"name": "Game Maker 8.2 glTF",
 	"folder": "gm82",
 	"version": "1.0",
-	"author": "Floogle",
-	"date": "27/08/2024",
+	"author": "Floogle && renex",
+	"date": "30/08/2024",
 	"license": "Free to use, also for commercial games.",
 	"description": "",
 	"helpfile": "",
@@ -191,17 +191,6 @@
 					"returntype": 2
 				},
 				{
-					"name": "__gltf_destroy",
-					"extname": "",
-					"calltype": 12,
-					"helpline": "__gltf_destroy(gltf)",
-					"hidden": false,
-					"argtypes": [
-						2
-					],
-					"returntype": 2
-				},
-				{
 					"name": "gltf_get_animation",
 					"extname": "",
 					"calltype": 12,
@@ -346,6 +335,18 @@
 					"returntype": 2
 				},
 				{
+					"name": "gltf_material_metalness",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_material_metalness(gltf,material)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
 					"name": "gltf_material_normal_scale",
 					"extname": "",
 					"calltype": 12,
@@ -410,6 +411,18 @@
 					"extname": "",
 					"calltype": 12,
 					"helpline": "gltf_material_occlusion_texture(gltf,material)",
+					"hidden": false,
+					"argtypes": [
+						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "gltf_material_roughness",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "gltf_material_roughness(gltf,material)",
 					"hidden": false,
 					"argtypes": [
 						2,
@@ -1083,6 +1096,17 @@
 					"hidden": true,
 					"argtypes": [
 						2,
+						2
+					],
+					"returntype": 2
+				},
+				{
+					"name": "__gltf_destroy",
+					"extname": "",
+					"calltype": 12,
+					"helpline": "__gltf_destroy(gltf)",
+					"hidden": false,
+					"argtypes": [
 						2
 					],
 					"returntype": 2

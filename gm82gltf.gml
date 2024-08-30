@@ -413,6 +413,7 @@
 
             shader_vertex_uniform_matrix("uMatrixW",mtx_world)
             shader_vertex_uniform_matrix("uMatrixWVP",mtx_world_view_projection)
+            shader_pixel_uniform_matrix("uMatrixV",mtx_view)                 
             
             shader_vertex_uniform_f("uSkinEnabled",__skin>=0)
             if (__skin>=0) {
@@ -469,11 +470,14 @@
             if (__texture_rough!=noone) {
                 texture_set_stage("uRoughTexture",__texture_rough)
                 texture_set_stage_interpolation("uRoughTexture",__filter)
-                texture_set_stage("uEnvMap",__gm82gltf_envmap_background_tex)
-                texture_set_stage_interpolation("uEnvMap",1)
-                shader_pixel_uniform_matrix("uMatrixV",mtx_view)                 
                 shader_pixel_uniform_f("uRoughnessMap_enabled",1)
             } else shader_pixel_uniform_f("uRoughnessMap_enabled",0)
+            
+            texture_set_stage("uEnvMap",__gm82gltf_envmap_background_tex)
+            texture_set_stage_interpolation("uEnvMap",1)
+                
+            shader_pixel_uniform_f("uRoughness",gltf_material_roughness(argument0,__material))
+            shader_pixel_uniform_f("uMetalness",gltf_material_metalness(argument0,__material))
             
             // do final draw
             if (__gm82gltf_meshindices[__unique_mesh_id,__i]>=0)
