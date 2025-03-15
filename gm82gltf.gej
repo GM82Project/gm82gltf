@@ -3,7 +3,7 @@
 	"folder": "gm82",
 	"version": "1.0",
 	"author": "Floogle && renex",
-	"date": "04/02/2025",
+	"date": "15/03/2025",
 	"license": "Free to use, also for commercial games.",
 	"description": "Part of the standard Game Maker 8.2 distribution. This extension allows you to load and render advanced GLTF models exported from blender, with PBR materials, animation, and bone deformation.",
 	"helpfile": "",
