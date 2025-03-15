@@ -152,7 +152,7 @@
                 vertex_buffer_delete(__gm82gltf_primitivebuffers[__primitive,__k])
                 __k+=1
             }
-            __k=0 repeat (gltf_mesh_primitive_morph_count(__gltf,__i,__j)*3) {
+            __k=0 repeat (gltf_mesh_primitive_morph_count(argument0,__i,__j)*3) {
                 vertex_buffer_delete(__gm82gltf_primitivebuffers[__primitive,__k])
                 __k+=1
             }
