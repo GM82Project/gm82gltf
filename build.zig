@@ -52,11 +52,24 @@ pub fn build(b: *std.Build) !void {
     const d3dcompiler_file = b.addInstallFileWithDir(d3dcompiler_output, .prefix, "d3dcompiler_47.dll");
     fxc_file.step.dependOn(&d3dcompiler_file.step);
 
+    // rename an unused import to fix windows 7 compat
+    const win7_fix = b.addSystemCommand(&.{
+        if (builtin.os.tag == .windows) "py" else "python3", "-c",
+        \\import sys
+        \\f = open("zig-out/bin/gm82gltf.dll", "rb")
+        \\dat = f.read()
+        \\f.close()
+        \\f = open("zig-out/bin/gm82gltf.dll", "wb")
+        \\f.write(dat.replace(b"RtlWaitOnAddress", b"ZwYieldExecution"))
+        \\f.close()
+    });
+    win7_fix.step.dependOn(&artifact_step.step);
+
     const gm82gex_run = b.addSystemCommand(&.{if (builtin.os.tag == .windows) "py" else "python3"});
     gm82gex_run.addArg(b.getInstallPath(gm82gex_file.dir, gm82gex_file.dest_rel_path));
     gm82gex_run.addFileArg(.{ .src_path = .{ .owner = b, .sub_path = "gm82gltf.gej" } });
     gm82gex_run.step.dependOn(&gm82gex_file.step);
-    gm82gex_run.step.dependOn(&artifact_step.step);
+    gm82gex_run.step.dependOn(&win7_fix.step);
     b.getInstallStep().dependOn(&gm82gex_run.step);
 
     const vshader_compile_step = try fxc(b, fxc_file, "/Tvs_3_0", "vertex.vs3", "vertex.hlsl");
