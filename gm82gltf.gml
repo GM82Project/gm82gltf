@@ -223,7 +223,7 @@
         __ibtype=ib_format_16
         __src=buffer_create()
         buffer_set_size(__src,__size)
-        gltf_accessor_copy(argument0,argument1,buffer_get_address(__src,0),buffer_get_size(__src))
+        gltf_accessor_copy(argument0,argument1,buffer_get_address(__src),buffer_get_size(__src))
         __dst=buffer_create()
         buffer_set_pos(__src,0)
         if (__type==5121) {
@@ -234,7 +234,7 @@
             show_error("Unknown index buffer type "+string(__type),true)
             exit
         }
-        __address=buffer_get_address(__dst,0)
+        __address=buffer_get_address(__dst)
     }
     __ib=__gm82dx9_index_create_buffer_from_buffer(__address,__size,__ibtype)
     if (__src>=0) {buffer_destroy(__src) buffer_destroy(__dst)}
