@@ -1,4 +1,6 @@
 #define __gltf_init
+    globalvar gm82gltf_version;gm82gltf_version=100
+    
     globalvar __gm82gltf_bgpixel; __gm82gltf_bgpixel=background_create_color(1,1,c_white)
     globalvar __gm82gltf_texpixel; __gm82gltf_texpixel=background_get_texture(__gm82gltf_bgpixel)
     globalvar __gm82gltf_backgrounds;
