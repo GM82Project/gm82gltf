@@ -3,5 +3,4 @@ zig-out/
 test/
 *.glb
 *.gex
-*.bat
 *.gm81
