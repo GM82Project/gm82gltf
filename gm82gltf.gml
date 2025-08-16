@@ -1,6 +1,8 @@
 #define __gltf_init
     globalvar gm82gltf_version;gm82gltf_version=100
     
+    globalvar __gm82gltf_shaderset;
+    
     globalvar __gm82gltf_bgpixel; __gm82gltf_bgpixel=background_create_color(1,1,c_white)
     globalvar __gm82gltf_texpixel; __gm82gltf_texpixel=background_get_texture(__gm82gltf_bgpixel)
     globalvar __gm82gltf_backgrounds;
@@ -331,63 +333,70 @@
     
     texture_set_repeat(true)
     if (__mesh_id>=0) {    
-        shader_set(__gm82gltf_shader_vertex,__gm82gltf_shader_pixel)
-    
-        //bind lights
-        if (d3d_get_lighting()) {
-            var __i,__lb;
-            
-            __lb=__gm82gltf_lightbuffer
-            buffer_get_lights(__lb)
-            
-            col_addr=shader_pixel_uniform_get_address("uLightColor")
-            //pos_addr=shader_pixel_uniform_get_address("uLightPosRange")
-            dir_addr=shader_pixel_uniform_get_address("uLightDirection")
-            
-            __i=0; repeat (8) {
-                enabled=d3d_light_enabled(__i)
-                if (enabled) {            
-                    type=buffer_read_u32(__lb)
-                    
-                    colr=buffer_read_float(__lb)
-                    colg=buffer_read_float(__lb)
-                    colb=buffer_read_float(__lb)
-                    
-                    //skip over diffuse alpha and 2 more colors
-                    buffer_set_pos(__lb,buffer_get_pos(__lb)+9*4)
-                    
-                    posx=buffer_read_float(__lb)
-                    posy=buffer_read_float(__lb)
-                    posz=buffer_read_float(__lb)
-                    
-                    dirx=buffer_read_float(__lb)
-                    diry=buffer_read_float(__lb)
-                    dirz=buffer_read_float(__lb)
-                    
-                    range=buffer_read_float(__lb)
-                    
-                    //skip rest of buffer
-                    buffer_set_pos(__lb,buffer_get_pos(__lb)+6*4)
-                    
-                    shader_pixel_uniform_f(col_addr+__i,enabled*colr,enabled*colg,enabled*colb,1)
-                    ///shader_pixel_uniform_f(pos_addr+__i,posx,posy,posz,(type==1)*range)
-                    shader_pixel_uniform_f(dir_addr+__i,(type==3)*dirx,(type==3)*diry,(type==3)*dirz)
-                } else buffer_set_pos(__lb,buffer_get_pos(__lb)+104)
-            __i+=1}        
-            
-            shader_pixel_uniform_f("uLightingEnabled",1)
-            shader_pixel_uniform_color("uAmbientColor",d3d_light_get_ambient())
-            
-            d3d_get_projection_origin()
-            shader_pixel_uniform_f("uEyePos",d3d_get_projection_origin[0],d3d_get_projection_origin[1],d3d_get_projection_origin[2])
-        } else shader_pixel_uniform_f("uLightingEnabled",0)
+        if (!__gm82gltf_shaderset) {
+            __gm82gltf_shaderset=1
         
-        //bind fog
-        if (d3d_get_fog_enabled()) {
-            var __start;__start=d3d_get_fog_start()
-            shader_pixel_uniform_f("uFogSettings",1,__start,1/(d3d_get_fog_end()-__start))
-            shader_pixel_uniform_color("uFogColor",d3d_get_fog_color())
-        } else shader_pixel_uniform_f("uFogSettings",0)
+            shader_set(__gm82gltf_shader_vertex,__gm82gltf_shader_pixel)
+        
+            //bind lights
+            if (d3d_get_lighting()) {
+                var __i,__lb;
+                
+                __lb=__gm82gltf_lightbuffer
+                buffer_get_lights(__lb)
+                
+                col_addr=shader_pixel_uniform_get_address("uLightColor")
+                //pos_addr=shader_pixel_uniform_get_address("uLightPosRange")
+                dir_addr=shader_pixel_uniform_get_address("uLightDirection")
+                
+                __i=0; repeat (8) {
+                    enabled=d3d_light_enabled(__i)
+                    if (enabled) {            
+                        type=buffer_read_u32(__lb)
+                        
+                        colr=buffer_read_float(__lb)
+                        colg=buffer_read_float(__lb)
+                        colb=buffer_read_float(__lb)
+                        
+                        //skip over diffuse alpha and 2 more colors
+                        buffer_set_pos(__lb,buffer_get_pos(__lb)+9*4)
+                        
+                        posx=buffer_read_float(__lb)
+                        posy=buffer_read_float(__lb)
+                        posz=buffer_read_float(__lb)
+                        
+                        dirx=buffer_read_float(__lb)
+                        diry=buffer_read_float(__lb)
+                        dirz=buffer_read_float(__lb)
+                        
+                        range=buffer_read_float(__lb)
+                        
+                        //skip rest of buffer
+                        buffer_set_pos(__lb,buffer_get_pos(__lb)+6*4)
+                        
+                        shader_pixel_uniform_f(col_addr+__i,enabled*colr,enabled*colg,enabled*colb,1)
+                        ///shader_pixel_uniform_f(pos_addr+__i,posx,posy,posz,(type==1)*range)
+                        shader_pixel_uniform_f(dir_addr+__i,(type==3)*dirx,(type==3)*diry,(type==3)*dirz)
+                    } else {
+                        buffer_set_pos(__lb,buffer_get_pos(__lb)+104)
+                        shader_pixel_uniform_f(col_addr+__i,0,0,0,1)
+                    }
+                __i+=1}        
+                
+                shader_pixel_uniform_f("uLightingEnabled",1)
+                shader_pixel_uniform_color("uAmbientColor",d3d_light_get_ambient())
+                
+                d3d_get_projection_origin()
+                shader_pixel_uniform_f("uEyePos",d3d_get_projection_origin[0],d3d_get_projection_origin[1],d3d_get_projection_origin[2])
+            } else shader_pixel_uniform_f("uLightingEnabled",0)
+            
+            //bind fog
+            if (d3d_get_fog_enabled()) {
+                var __start;__start=d3d_get_fog_start()
+                shader_pixel_uniform_f("uFogSettings",1,__start,1/(d3d_get_fog_end()-__start))
+                shader_pixel_uniform_color("uFogColor",d3d_get_fog_color())
+            } else shader_pixel_uniform_f("uFogSettings",0)
+        }
         
         //for all mesh
         __unique_mesh_id=__gm82gltf_meshes[argument0,__mesh_id]
@@ -503,13 +512,14 @@
     }
 
     d3d_transform_stack_pop()
-    
-    shader_reset()
 
     __i=0 repeat (gltf_node_child_count(argument0,__node)) {
         gltf_draw_node(argument0,gltf_node_child(argument0,__node,__i))
         __i+=1
     }
+    
+    shader_reset()
+    __gm82gltf_shaderset=false
 
 //
 //
