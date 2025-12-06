@@ -15,7 +15,7 @@ var g_allocator = std.heap.GeneralPurposeAllocator(.{}){};
 var g_gltfs = std.AutoArrayHashMap(i32, GLB).init(g_allocator.allocator());
 var g_gltf_next_id: i32 = 1;
 var g_stringret: ?[:0]u8 = null;
-var g_matrices = std.ArrayList([16]f32).init(g_allocator.allocator());
+var g_matrices = std.array_list.AlignedManaged([16]f32, null).init(g_allocator.allocator());
 var g_data: ?[]u8 = null;
 var g_sorted_weights: ?[]f32 = null;
 var g_sorted_weight_ids: ?[]usize = null;
@@ -261,18 +261,21 @@ export fn __gltf_load(filename: [*:0]const u8) f64 {
             gltfDir.close();
         };
 
+        var readbuf = std.mem.zeroes([8192]u8);
+        var reader = file.reader(&readbuf);
+
         // GLB format
-        const magic = file.reader().readInt(u32, .little) catch break :blk;
+        const magic = reader.interface.takeInt(u32, .little) catch break :blk;
         if (magic != 0x46546c67) {
             break :blk;
         }
 
-        const version = file.reader().readInt(u32, .little) catch break :blk;
+        const version = reader.interface.takeInt(u32, .little) catch break :blk;
         if (version != 2) {
             break :blk;
         }
 
-        const fileLength = file.reader().readInt(u32, .little) catch break :blk;
+        const fileLength = reader.interface.takeInt(u32, .little) catch break :blk;
 
         var temp_alloc = std.heap.ArenaAllocator.init(g_allocator.allocator());
         defer temp_alloc.deinit();
@@ -282,16 +285,15 @@ export fn __gltf_load(filename: [*:0]const u8) f64 {
 
         var remaining_length = fileLength - 12;
         while (remaining_length > 0) {
-            const chunk_length = file.reader().readInt(u32, .little) catch break :blk;
+            const chunk_length = reader.interface.takeInt(u32, .little) catch break :blk;
             remaining_length -= chunk_length + 8;
-            const chunk_type = file.reader().readInt(u32, .little) catch break :blk;
+            const chunk_type = reader.interface.takeInt(u32, .little) catch break :blk;
             switch (chunk_type) {
                 0x4e4f534a => { // JSON
                     // there can only be one
                     if (json_parsed) |_| break :blk;
                     const json_data = temp_alloc.allocator().alloc(u8, chunk_length) catch break :blk;
-                    const json_size = file.readAll(json_data) catch break :blk;
-                    if (json_size != chunk_length) break :blk;
+                    reader.interface.readSliceAll(json_data) catch break :blk;
                     json_parsed = std.json.parseFromSlice(GLTF, owned_alloc.allocator(), json_data, .{ .ignore_unknown_fields = true, .allocate = .alloc_always }) catch |err| {
                         std.log.err("{}", .{err});
                         break :blk;
@@ -300,12 +302,11 @@ export fn __gltf_load(filename: [*:0]const u8) f64 {
                 0x004e4942 => { // BIN
                     // there can only be one
                     if (glb_binary) |_| break :blk;
-                    const blob = owned_alloc.allocator().alignedAlloc(u8, 4, chunk_length) catch break :blk;
-                    const blob_size = file.readAll(blob) catch break :blk;
-                    if (blob_size != chunk_length) break :blk;
+                    const blob = owned_alloc.allocator().alignedAlloc(u8, std.mem.Alignment.@"4", chunk_length) catch break :blk;
+                    reader.interface.readSliceAll(blob) catch break :blk;
                     glb_binary = blob;
                 },
-                else => file.seekBy(chunk_length) catch break :blk,
+                else => reader.seekBy(chunk_length) catch break :blk,
             }
         }
 
@@ -902,7 +903,7 @@ export fn gltf_accessor_pointer(gltf_id: f64, accessor_id: f64) f64 {
         }
         const size = accessor.count * stride;
         if (g_data) |data| g_allocator.allocator().free(data);
-        const data = g_allocator.allocator().alignedAlloc(u8, 4, size) catch return -1;
+        const data = g_allocator.allocator().alignedAlloc(u8, std.mem.Alignment.@"4", size) catch return -1;
         g_data = data;
         if (bv_maybe) |bv| {
             const buffer = array_get([]const u8, glb.buffers, bv.buffer) orelse return -1;
