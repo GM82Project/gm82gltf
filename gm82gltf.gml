@@ -39,7 +39,7 @@
 #define gltf_load
     ///gltf_load(fn)
     var __i,__j,__k,__gltf,__texfile,__accessor,__stride,__usage;
-    __gltf=__gltf_load(argument0)
+    __gltf=__gltf_load(working_directory,argument0)
     if (__gltf<0) return __gltf
     // load textures
     __i=0 repeat (gltf_texture_count(__gltf)) {

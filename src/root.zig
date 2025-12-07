@@ -246,17 +246,20 @@ export fn __gltf_reset() f64 {
     return 0;
 }
 
-export fn __gltf_load(filename: [*:0]const u8) f64 {
+export fn __gltf_load(working_directory: [*:0]const u8, filename: [*:0]const u8) f64 {
     // will be deleted if loading fails
     var owned_alloc = std.heap.ArenaAllocator.init(g_allocator.allocator());
 
     blk: {
+        var cwd = std.fs.openDirAbsoluteZ(working_directory, .{}) catch break :blk;
+        defer cwd.close();
+
         const filename_slice = std.mem.span(filename);
-        var file = std.fs.cwd().openFile(filename_slice, .{}) catch break :blk;
+        var file = cwd.openFile(filename_slice, .{}) catch break :blk;
 
         const filename_dir = std.fs.path.dirname(filename_slice);
         var gltfDir =
-            if (filename_dir) |dir| std.fs.cwd().openDir(dir, .{}) catch break :blk else std.fs.cwd();
+            if (filename_dir) |dir| cwd.openDir(dir, .{}) catch break :blk else cwd;
         defer if (filename_dir) |_| {
             gltfDir.close();
         };
@@ -1128,7 +1131,7 @@ export fn gltf_texture_size(gltf_id: f64, texture_id: f64) f64 {
 
 test "gltf stuff" {
     // https://github.com/KhronosGroup/glTF-Sample-Models/blob/main/2.0/Box/glTF-Binary/Box.glb
-    try testing.expectEqual(1, __gltf_load("Box.glb"));
+    try testing.expectEqual(1, __gltf_load(".", "Box.glb"));
     try testing.expectEqual(1, gltf_node_child_count(1, 0));
     try testing.expectEqual(1, gltf_node_child(1, 0, 0));
     try testing.expectEqual(648, g_gltfs.get(1).?.buffers[0].len);

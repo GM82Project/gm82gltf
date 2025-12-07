@@ -1118,6 +1118,7 @@
 					"helpline": "",
 					"hidden": true,
 					"argtypes": [
+						1,
 						1
 					],
 					"returntype": 2
